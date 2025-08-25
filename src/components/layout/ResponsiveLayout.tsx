@@ -28,16 +28,26 @@ export function ResponsiveLayout({ children, currentPath }: ResponsiveLayoutProp
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [location.pathname]);
 
-  // Check for tablet size with proper effect handling
+  // Check for tablet size with throttled resize handler for better performance
   React.useEffect(() => {
     const checkTabletSize = () => {
       const windowWidth = window.innerWidth;
       setIsTablet(!isMobile && windowWidth > 768 && windowWidth <= 1024);
     };
 
+    // Throttle resize events for better performance
+    let timeoutId: NodeJS.Timeout;
+    const throttledResize = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(checkTabletSize, 100);
+    };
+
     checkTabletSize();
-    window.addEventListener('resize', checkTabletSize);
-    return () => window.removeEventListener('resize', checkTabletSize);
+    window.addEventListener('resize', throttledResize, { passive: true });
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('resize', throttledResize);
+    };
   }, [isMobile]);
 
   if (isMobile) {

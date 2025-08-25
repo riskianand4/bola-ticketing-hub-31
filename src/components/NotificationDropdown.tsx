@@ -74,7 +74,7 @@ export function NotificationDropdown() {
           filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
-          console.log('New notification received in dropdown:', payload);
+          // New notification received in dropdown
           setNotifications(prev => [payload.new as Notification, ...prev.slice(0, 9)]);
         }
       )

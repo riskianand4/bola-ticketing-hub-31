@@ -37,7 +37,7 @@ export function PushNotificationManager() {
       return;
     }
 
-    console.log('Setting up notification listener for user:', user.id);
+    // Setting up notification listener for authenticated user
     setIsListening(true);
 
     const channel = supabase
@@ -51,12 +51,12 @@ export function PushNotificationManager() {
           filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
-          console.log('New notification received:', payload);
+          // New notification received via realtime
           handleNewNotification(payload.new as NotificationPayload);
         }
       )
       .subscribe((status) => {
-        console.log('Notification subscription status:', status);
+        // Notification subscription status updated
       });
 
     return () => {

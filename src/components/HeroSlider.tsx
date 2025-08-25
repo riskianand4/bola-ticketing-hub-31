@@ -103,7 +103,11 @@ export function HeroSlider() {
             
             {/* Text Content */}
             <div className="text-white space-y-6 animate-fade-in">
-              {currentSlideData.badge}
+              {currentSlideData.badge && (
+                <Badge variant="secondary" className="text-sm font-medium">
+                  {currentSlideData.badge}
+                </Badge>
+              )}
               
               <div className="space-y-2">
                 <h1 className="text-4xl lg:text-6xl font-bold leading-tight">
@@ -136,17 +140,41 @@ export function HeroSlider() {
             
             {/* Stats Card */}
             <div className="flex justify-center lg:justify-end">
-              
+              {currentSlideData.stats && (
+                <Card className="bg-black/30 backdrop-blur-sm border-white/20 text-white animate-scale-in">
+                  <CardContent className="p-6">
+                    <div className="grid grid-cols-3 gap-4 text-center">
+                      {currentSlideData.stats.map((stat, index) => (
+                        <div key={index} className="space-y-1">
+                          <p className="text-2xl font-bold text-primary">{stat.value}</p>
+                          <p className="text-sm text-gray-300">{stat.label}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         </div>
       </div>
       
       {/* Navigation Arrows */}
+      <button 
+        onClick={prevSlide}
+        className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 transition-all duration-200 hover:scale-110"
+        aria-label="Previous slide"
+      >
+        <ChevronLeft className="h-6 w-6" />
+      </button>
       
-      
-      
-      
+      <button 
+        onClick={nextSlide}
+        className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 transition-all duration-200 hover:scale-110"
+        aria-label="Next slide"
+      >
+        <ChevronRight className="h-6 w-6" />
+      </button>
       {/* Slide Indicators */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-2">
         {slides.map((_, index) => <button key={index} onClick={() => setCurrentSlide(index)} className={`w-3 h-3 rounded-full transition-all duration-200 ${index === currentSlide ? "bg-white scale-125" : "bg-white/50 hover:bg-white/70"}`} />)}
