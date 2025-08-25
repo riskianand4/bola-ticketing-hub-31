@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Undangan Bergabung</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #1a472a 0%, #2d5a3d 100%);
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(255,255,255,0.1) 2px, transparent 2px),
+                radial-gradient(circle at 80% 80%, rgba(255,255,255,0.1) 2px, transparent 2px),
+                radial-gradient(circle at 40% 60%, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 50px 50px, 70px 70px, 30px 30px;
+        }
+        .logo {
+            color: #ffffff;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+        .tagline {
+            color: #b8d4c1;
+            font-size: 14px;
+            margin: 0;
+            position: relative;
+            z-index: 1;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .invitation-badge {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #333;
+            padding: 10px 20px;
+            border-radius: 25px;
+            display: inline-block;
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+        }
+        .title {
+            color: #1a472a;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .message {
+            font-size: 16px;
+            margin-bottom: 30px;
+            text-align: center;
+            color: #555555;
+        }
+        .inviter-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+            text-align: center;
+            border: 1px solid #dee2e6;
+        }
+        .inviter-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1a472a 0%, #2d5a3d 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .button {
+            display: inline-block;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: #ffffff !important;
+            text-decoration: none;
+            padding: 18px 40px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 16px;
+            text-align: center;
+            margin: 20px 0;
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+            transition: all 0.3s ease;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(40, 167, 69, 0.4);
+        }
+        .button-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .benefits {
+            background-color: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+        .benefits-title {
+            font-weight: bold;
+            color: #1a472a;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .benefit {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .benefit .icon {
+            font-size: 20px;
+            width: 30px;
+            text-align: center;
+        }
+        .benefit .text {
+            font-size: 14px;
+            color: #555;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e9ecef;
+        }
+        .footer p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #6c757d;
+        }
+        .divider {
+            height: 2px;
+            background: linear-gradient(135deg, #1a472a 0%, #2d5a3d 100%);
+            margin: 20px 0;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .stat {
+            text-align: center;
+        }
+        .stat .number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1a472a;
+        }
+        .stat .label {
+            font-size: 12px;
+            color: #666;
+        }
+        @media only screen and (max-width: 600px) {
+            .container {
+                width: 100% !important;
+            }
+            .header, .content, .footer {
+                padding: 20px !important;
+            }
+            .title {
+                font-size: 20px;
+            }
+            .benefits-grid {
+                grid-template-columns: 1fr;
+            }
+            .stats {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">⚽ PERSIRAJA FC</div>
+            <p class="tagline">Sistem Tiket Digital Resmi</p>
+        </div>
+        
+        <div class="content">
+            <div style="text-align: center;">
+                <span class="invitation-badge">🎉 UNDANGAN KHUSUS</span>
+            </div>
+            
+            <h1 class="title">Anda Diundang Bergabung!</h1>
+            
+            <p class="message">
+                Selamat! Anda telah diundang untuk bergabung dengan komunitas eksklusif 
+                Persiraja FC dan menikmati pengalaman sepak bola yang tak terlupakan.
+            </p>
+            
+            <div class="inviter-card">
+                <div class="inviter-avatar">
+                    👤
+                </div>
+                <p style="margin: 0; font-size: 16px; color: #333;">
+                    <strong>Diundang oleh Admin Persiraja FC</strong>
+                </p>
+                <p style="margin: 5px 0 0 0; font-size: 14px; color: #666;">
+                    Tim Resmi Persiraja FC
+                </p>
+            </div>
+            
+            <div class="stats">
+                <div class="stat">
+                    <div class="number">10K+</div>
+                    <div class="label">Fans Terdaftar</div>
+                </div>
+                <div class="stat">
+                    <div class="number">50+</div>
+                    <div class="label">Pertandingan/Tahun</div>
+                </div>
+                <div class="stat">
+                    <div class="number">100%</div>
+                    <div class="label">Tiket Digital</div>
+                </div>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <div class="button-container">
+                <a href="{{ .ConfirmationURL }}" class="button">
+                    🚀 Terima Undangan & Daftar
+                </a>
+            </div>
+            
+            <p style="font-size: 14px; color: #666; text-align: center; margin-top: 30px;">
+                Jika tombol tidak bekerja, salin dan tempel URL berikut ke browser Anda:<br>
+                <a href="{{ .ConfirmationURL }}" style="color: #28a745; word-break: break-all;">{{ .ConfirmationURL }}</a>
+            </p>
+            
+            <div class="benefits">
+                <div class="benefits-title">🎁 Keuntungan Eksklusif Member</div>
+                <div class="benefits-grid">
+                    <div class="benefit">
+                        <div class="icon">🎫</div>
+                        <div class="text">Akses prioritas pembelian tiket</div>
+                    </div>
+                    <div class="benefit">
+                        <div class="icon">💰</div>
+                        <div class="text">Diskon merchandise hingga 20%</div>
+                    </div>
+                    <div class="benefit">
+                        <div class="icon">📱</div>
+                        <div class="text">Notifikasi pertandingan real-time</div>
+                    </div>
+                    <div class="benefit">
+                        <div class="icon">🏆</div>
+                        <div class="text">Akses konten eksklusif club</div>
+                    </div>
+                    <div class="benefit">
+                        <div class="icon">🎉</div>
+                        <div class="text">Undangan event khusus fans</div>
+                    </div>
+                    <div class="benefit">
+                        <div class="icon">📊</div>
+                        <div class="text">Statistik pertandingan lengkap</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="background-color: #d1ecf1; padding: 20px; border-radius: 8px; margin-top: 30px; border-left: 4px solid #17a2b8;">
+                <p style="margin: 0; font-size: 14px; color: #0c5460; text-align: center;">
+                    <strong>🔥 Penawaran Terbatas!</strong><br>
+                    Bergabunglah dalam 7 hari ke depan dan dapatkan:<br>
+                    • Jersey digital eksklusif<br>
+                    • Wallpaper HD tim favorit<br>
+                    • Badge member premium
+                </p>
+            </div>
+            
+            <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                <p style="margin: 0; font-size: 14px; color: #856404; text-align: center;">
+                    ⏰ <strong>Undangan ini berlaku selama 7 hari</strong><br>
+                    Jangan lewatkan kesempatan menjadi bagian dari keluarga besar Persiraja FC!
+                </p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div class="divider"></div>
+            <p><strong>Persiraja FC</strong></p>
+            <p>Sistem Tiket Digital Resmi</p>
+            <p style="font-size: 12px; margin-top: 20px;">
+                Undangan ini dikirim atas nama tim Persiraja FC. 
+                Jika Anda merasa ini adalah kesalahan, silakan abaikan email ini.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

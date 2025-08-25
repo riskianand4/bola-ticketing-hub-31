@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Konfirmasi Pendaftaran</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #1a472a 0%, #2d5a3d 100%);
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .logo {
+            color: #ffffff;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .tagline {
+            color: #b8d4c1;
+            font-size: 14px;
+            margin: 0;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .title {
+            color: #1a472a;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .message {
+            font-size: 16px;
+            margin-bottom: 30px;
+            text-align: center;
+            color: #555555;
+        }
+        .button {
+            display: inline-block;
+            background: linear-gradient(135deg, #1a472a 0%, #2d5a3d 100%);
+            color: #ffffff !important;
+            text-decoration: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            text-align: center;
+            margin: 20px 0;
+            box-shadow: 0 4px 15px rgba(26, 71, 42, 0.3);
+        }
+        .button-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e9ecef;
+        }
+        .footer p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #6c757d;
+        }
+        .social-links {
+            margin: 20px 0;
+        }
+        .social-links a {
+            display: inline-block;
+            margin: 0 10px;
+            color: #1a472a;
+            text-decoration: none;
+        }
+        .divider {
+            height: 2px;
+            background: linear-gradient(135deg, #1a472a 0%, #2d5a3d 100%);
+            margin: 20px 0;
+        }
+        @media only screen and (max-width: 600px) {
+            .container {
+                width: 100% !important;
+            }
+            .header, .content, .footer {
+                padding: 20px !important;
+            }
+            .title {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">⚽ PERSIRAJA FC</div>
+            <p class="tagline">Sistem Tiket Digital Resmi</p>
+        </div>
+        
+        <div class="content">
+            <h1 class="title">Selamat Datang di Persiraja FC!</h1>
+            
+            <p class="message">
+                Terima kasih telah bergabung dengan komunitas Persiraja FC. 
+                Untuk menyelesaikan pendaftaran akun Anda, silakan konfirmasi email Anda dengan mengklik tombol di bawah ini.
+            </p>
+            
+            <div class="divider"></div>
+            
+            <div class="button-container">
+                <a href="{{ .ConfirmationURL }}" class="button">
+                    Konfirmasi Email Saya
+                </a>
+            </div>
+            
+            <p style="font-size: 14px; color: #666; text-align: center; margin-top: 30px;">
+                Jika tombol tidak bekerja, salin dan tempel URL berikut ke browser Anda:<br>
+                <a href="{{ .ConfirmationURL }}" style="color: #1a472a; word-break: break-all;">{{ .ConfirmationURL }}</a>
+            </p>
+            
+            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 30px;">
+                <p style="margin: 0; font-size: 14px; color: #666; text-align: center;">
+                    <strong>Setelah konfirmasi, Anda dapat:</strong><br>
+                    ✅ Membeli tiket pertandingan<br>
+                    ✅ Mengakses merchandise resmi<br>
+                    ✅ Mendapat notifikasi pertandingan<br>
+                    ✅ Bergabung dengan komunitas fans
+                </p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div class="divider"></div>
+            <p><strong>Persiraja FC</strong></p>
+            <p>Sistem Tiket Digital Resmi</p>
+            <div class="social-links">
+                <a href="#">Facebook</a> |
+                <a href="#">Instagram</a> |
+                <a href="#">Twitter</a>
+            </div>
+            <p style="font-size: 12px; margin-top: 20px;">
+                Email ini dikirim secara otomatis. Jika Anda tidak mendaftar di website kami, 
+                silakan abaikan email ini.
+            </p>
+        </div>
+    </div>
+</body>
+</html>
