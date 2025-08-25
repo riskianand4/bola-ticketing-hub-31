@@ -15,7 +15,8 @@ import {
   TrendingUp,
   TrendingDown,
   DollarSign,
-  MessageSquare
+  MessageSquare,
+  Tag
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,6 +38,7 @@ import { GalleryManagement } from "@/components/GalleryManagement";
 import { ScannerUserManagement } from "@/components/ScannerUserManagement";
 import { SimpleNotificationSystem } from "@/components/SimpleNotificationSystem";
 import { LiveCommentaryAdmin } from "@/components/LiveCommentaryAdmin";
+import { PromoCodeManagement } from "@/components/PromoCodeManagement";
 import { LiveCommentarySelector } from "@/components/LiveCommentarySelector";
 import { AdminNotificationSender } from "@/components/AdminNotificationSender";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -312,6 +314,7 @@ const AdminDashboard = () => {
     { id: "notifications", label: "Push Notifications", icon: Bell },
     { id: "tickets", label: "Kelola Tiket", icon: Ticket },
     { id: "merchandise", label: "Kelola Merchandise", icon: ShoppingBag },
+    { id: "promo-codes", label: "Kode Promo", icon: Tag },
     { id: "players", label: "Kelola Pemain", icon: Users2 },
     { id: "gallery", label: "Kelola Galeri", icon: ImageIcon },
     { id: "settings", label: "Pengaturan", icon: Settings },
@@ -348,6 +351,9 @@ const AdminDashboard = () => {
       
       case "notifications":
         return <AdminNotificationSender />;
+      
+      case "promo-codes":
+        return <PromoCodeManagement />;
       
       case "dashboard":
         console.log("Rendering dashboard with chartData:", chartData.loading);

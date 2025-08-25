@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useCart } from "@/context/CartContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft } from "lucide-react";
@@ -10,11 +9,16 @@ import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { XenditPaymentButton } from "@/components/XenditPaymentButton";
+import { PromoCodeInput } from "@/components/PromoCodeInput";
 
 export default function CartPage() {
   const { items, updateQuantity, removeItem, clearCart, getTotalPrice } = useCart();
   const { user } = useAuth();
-  const [promoCode, setPromoCode] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState<{
+    code: string;
+    discount: number;
+    id: string;
+  } | null>(null);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -24,15 +28,29 @@ export default function CartPage() {
     }).format(price);
   };
 
-  const shippingCost = 15000;
+  const shippingCost = getTotalPrice() >= 500000 ? 0 : 15000;
   const tax = Math.round(getTotalPrice() * 0.1);
-  const finalTotal = getTotalPrice() + shippingCost + tax;
+  const discount = appliedPromo?.discount || 0;
+  const finalTotal = Math.max(0, getTotalPrice() + shippingCost + tax - discount);
+
+  const handlePromoApplied = (discountAmount: number, promoId: string, promoCode: string) => {
+    setAppliedPromo({
+      code: promoCode,
+      discount: discountAmount,
+      id: promoId
+    });
+  };
+
+  const handlePromoRemoved = () => {
+    setAppliedPromo(null);
+  };
 
   const handlePaymentSuccess = () => {
     toast.success("Checkout berhasil!", {
       description: "Pesanan Anda sedang diproses"
     });
     clearCart();
+    setAppliedPromo(null);
   };
 
   if (items.length === 0) {
@@ -151,19 +169,13 @@ export default function CartPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Promo Code */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Kode Promo</label>
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Masukkan kode promo"
-                      value={promoCode}
-                      onChange={(e) => setPromoCode(e.target.value)}
-                    />
-                    <Button variant="outline" size="sm">
-                      Gunakan
-                    </Button>
-                  </div>
-                </div>
+                <PromoCodeInput
+                  promoType="merchandise"
+                  totalAmount={getTotalPrice()}
+                  onPromoApplied={handlePromoApplied}
+                  onPromoRemoved={handlePromoRemoved}
+                  appliedPromo={appliedPromo}
+                />
 
                 <Separator />
 
@@ -175,12 +187,26 @@ export default function CartPage() {
                   </div>
                   <div className="flex justify-between">
                     <span>Ongkos Kirim</span>
-                    <span>{formatPrice(shippingCost)}</span>
+                    <span className={shippingCost === 0 ? "text-green-600 line-through" : ""}>
+                      {formatPrice(shippingCost === 0 ? 15000 : shippingCost)}
+                    </span>
                   </div>
+                  {shippingCost === 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Gratis Ongkir</span>
+                      <span>-{formatPrice(15000)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span>Pajak</span>
                     <span>{formatPrice(tax)}</span>
                   </div>
+                  {appliedPromo && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Diskon ({appliedPromo.code})</span>
+                      <span>-{formatPrice(appliedPromo.discount)}</span>
+                    </div>
+                  )}
                 </div>
 
                 <Separator />
@@ -210,7 +236,10 @@ export default function CartPage() {
                     orderData={{
                       type: 'merchandise',
                       items: items,
-                      shipping_address: "Alamat pengiriman akan dikonfirmasi"
+                      shipping_address: "Alamat pengiriman akan dikonfirmasi",
+                      promo_code: appliedPromo?.code,
+                      promo_discount: appliedPromo?.discount,
+                      promo_id: appliedPromo?.id
                     }}
                     onSuccess={handlePaymentSuccess}
                     className="w-full"

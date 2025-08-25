@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,23 +10,51 @@ import { Calendar, MapPin, Clock, Users, CreditCard, ArrowLeft, Plus, Minus } fr
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { PromoCodeInput } from "@/components/PromoCodeInput";
+
+interface Ticket {
+  id: string;
+  ticket_type: string;
+  price: number;
+  available_quantity: number;
+  description?: string;
+}
 
 export default function TicketPurchasePage() {
   const { matchId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  
+  const [match, setMatch] = useState<any>(null);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [quantity, setQuantity] = useState(1);
-  const [match, setMatch] = useState<any>(null);
-  const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [appliedPromo, setAppliedPromo] = useState<{
+    code: string;
+    discount: number;
+    id: string;
+  } | null>(null);
+  
   const [customerInfo, setCustomerInfo] = useState({
     name: "",
     email: "",
     phone: "",
     idCard: ""
   });
+
+  const handlePromoApplied = (discountAmount: number, promoId: string, promoCode: string) => {
+    setAppliedPromo({
+      code: promoCode,
+      discount: discountAmount,
+      id: promoId
+    });
+  };
+
+  const handlePromoRemoved = () => {
+    setAppliedPromo(null);
+  };
 
   useEffect(() => {
     fetchMatchData();
@@ -87,9 +115,11 @@ export default function TicketPurchasePage() {
   };
 
   const selectedTicket = tickets.find(ticket => ticket.id === selectedCategory);
-  const totalPrice = selectedTicket ? selectedTicket.price * quantity : 0;
-  const adminFee = totalPrice * 0.05; // 5% admin fee
-  const finalTotal = totalPrice + adminFee;
+  const basePrice = selectedTicket ? selectedTicket.price * quantity : 0;
+  const discount = appliedPromo?.discount || 0;
+  const subtotal = Math.max(0, basePrice - discount);
+  const adminFee = subtotal * 0.05; // 5% admin fee
+  const finalTotal = subtotal + adminFee;
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -133,10 +163,11 @@ export default function TicketPurchasePage() {
       state: {
         match,
         ticket: selectedTicket,
-        ticketId: selectedTicket.id,
+        ticketId: selectedTicket?.id,
         quantity,
         customerInfo,
-        totalPrice: finalTotal
+        totalPrice: finalTotal,
+        appliedPromo
       }
     });
   };
@@ -400,8 +431,25 @@ export default function TicketPurchasePage() {
                       <Separator />
                       <div className="flex justify-between">
                         <span>Subtotal:</span>
-                        <span>{formatPrice(totalPrice)}</span>
+                        <span>{formatPrice(basePrice)}</span>
                       </div>
+                      
+                      {/* Promo Code Section */}
+                      <PromoCodeInput
+                        promoType="ticket"
+                        totalAmount={basePrice}
+                        onPromoApplied={handlePromoApplied}
+                        onPromoRemoved={handlePromoRemoved}
+                        appliedPromo={appliedPromo}
+                      />
+                      
+                      {appliedPromo && (
+                        <div className="flex justify-between text-green-600">
+                          <span>Diskon ({appliedPromo.code}):</span>
+                          <span>-{formatPrice(discount)}</span>
+                        </div>
+                      )}
+                      
                       <div className="flex justify-between text-sm text-muted-foreground">
                         <span>Biaya admin (5%):</span>
                         <span>{formatPrice(adminFee)}</span>
