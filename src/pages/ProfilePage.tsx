@@ -325,7 +325,7 @@ export default function ProfilePage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Profile Card */}
-          <Card className="lg:col-span-1">
+          <Card className="lg:col-span-1 self-start">
             <CardHeader className="text-center">
               <ProfilePhotoUpload
                 currentPhotoUrl={profile.avatar_url}
