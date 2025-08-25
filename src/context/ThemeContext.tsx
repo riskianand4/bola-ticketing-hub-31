@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-type Theme = 'default' | 'anichin';
+type Theme = 'default' | 'anichin' | 'light' | 'football';
 
 interface ThemeContextType {
   theme: Theme;
@@ -20,14 +20,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('theme', theme);
     
     // Remove existing theme classes
-    document.documentElement.classList.remove('theme-default', 'theme-anichin');
+    document.documentElement.classList.remove('theme-default', 'theme-anichin', 'theme-light', 'theme-football');
     
     // Add current theme class
     document.documentElement.classList.add(`theme-${theme}`);
   }, [theme]);
 
   const toggleTheme = () => {
-    setThemeState(prev => prev === 'default' ? 'anichin' : 'default');
+    const themes: Theme[] = ['default', 'anichin', 'light', 'football'];
+    const currentIndex = themes.indexOf(theme);
+    const nextIndex = (currentIndex + 1) % themes.length;
+    setThemeState(themes[nextIndex]);
   };
 
   const setTheme = (newTheme: Theme) => {
