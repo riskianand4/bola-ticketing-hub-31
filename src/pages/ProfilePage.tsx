@@ -15,6 +15,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { ProfilePhotoUpload } from "@/components/ProfilePhotoUpload";
 import { NotificationPreferences } from "@/components/NotificationPreferences";
+import { ChangeEmailDialog } from "@/components/dialogs/ChangeEmailDialog";
+import { ChangePasswordDialog } from "@/components/dialogs/ChangePasswordDialog";
+import { DeleteAccountDialog } from "@/components/dialogs/DeleteAccountDialog";
 import { 
   User, 
   Mail, 
@@ -70,6 +73,11 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'profile');
+  
+  // Dialog states
+  const [showChangeEmailDialog, setShowChangeEmailDialog] = useState(false);
+  const [showChangePasswordDialog, setShowChangePasswordDialog] = useState(false);
+  const [showDeleteAccountDialog, setShowDeleteAccountDialog] = useState(false);
 
   // Profile completion calculation
   const calculateProfileCompletion = (profile: Profile | null) => {
@@ -235,80 +243,16 @@ export default function ProfilePage() {
     }
   };
 
-  const handleChangeEmail = async () => {
-    const newEmail = prompt('Masukkan email baru:');
-    if (!newEmail) return;
-
-    try {
-      const { error } = await supabase.auth.updateUser({ email: newEmail });
-      if (error) throw error;
-      
-      toast({
-        title: "Email berhasil diperbarui",
-        description: "Periksa email Anda untuk konfirmasi.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Gagal mengubah email",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+  const handleChangeEmail = () => {
+    setShowChangeEmailDialog(true);
   };
 
-  const handleChangePassword = async () => {
-    const newPassword = prompt('Masukkan password baru:');
-    if (!newPassword) return;
-
-    try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) throw error;
-      
-      toast({
-        title: "Password berhasil diperbarui",
-        description: "Password Anda telah diubah.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Gagal mengubah password",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+  const handleChangePassword = () => {
+    setShowChangePasswordDialog(true);
   };
 
-  const handleDeleteAccount = async () => {
-    const confirmed = confirm('Apakah Anda yakin ingin menghapus akun? Tindakan ini tidak dapat dibatalkan.');
-    if (!confirmed) return;
-
-    try {
-      // First delete the profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('user_id', user?.id);
-
-      if (profileError) throw profileError;
-
-      // Then delete the auth user (this will cascade delete)
-      const { error: authError } = await supabase.auth.admin.deleteUser(user?.id || '');
-      if (authError) throw authError;
-
-      toast({
-        title: "Akun berhasil dihapus",
-        description: "Akun Anda telah dihapus secara permanen.",
-      });
-
-      // Sign out and redirect
-      await supabase.auth.signOut();
-      window.location.href = '/';
-    } catch (error: any) {
-      toast({
-        title: "Gagal menghapus akun",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+  const handleDeleteAccount = () => {
+    setShowDeleteAccountDialog(true);
   };
 
   const formatPrice = (price: number) => {
@@ -648,6 +592,22 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+      
+      {/* Dialogs */}
+      <ChangeEmailDialog
+        open={showChangeEmailDialog}
+        onOpenChange={setShowChangeEmailDialog}
+      />
+      <ChangePasswordDialog
+        open={showChangePasswordDialog}
+        onOpenChange={setShowChangePasswordDialog}
+      />
+      <DeleteAccountDialog
+        open={showDeleteAccountDialog}
+        onOpenChange={setShowDeleteAccountDialog}
+        userEmail={user.email || ''}
+        userId={user.id}
+      />
     </div>
   );
 }
