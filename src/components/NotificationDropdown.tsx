@@ -282,7 +282,7 @@ export function NotificationDropdown() {
                 <div key={notification.id}>
                   <div 
                     className={`p-3 rounded-lg cursor-pointer transition-colors hover:bg-muted/50 ${
-                      !notification.is_read ? 'bg-blue-50 dark:bg-blue-950/30' : ''
+                      !notification.is_read ? 'bg-primary/10 border border-primary/20' : ''
                     }`}
                     onClick={() => handleNotificationClick(notification)}
                   >
@@ -295,7 +295,7 @@ export function NotificationDropdown() {
                             {notification.title}
                           </p>
                           {!notification.is_read && (
-                            <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0" />
+                            <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />
                           )}
                         </div>
                         
