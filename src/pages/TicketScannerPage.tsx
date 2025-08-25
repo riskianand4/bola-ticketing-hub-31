@@ -87,6 +87,8 @@ export default function TicketScannerPage() {
   const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
   const [barcodeSupported, setBarcodeSupported] = useState(true);
   const [lastScanTime, setLastScanTime] = useState(0);
+  const [isProcessingScan, setIsProcessingScan] = useState(false);
+  const [lastScannedCode, setLastScannedCode] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -252,20 +254,30 @@ export default function TicketScannerPage() {
 
   const handleBarcodeDetected = useCallback(async (result: string) => {
     const currentTime = Date.now();
+    const trimmedResult = result.trim();
     
-    // Debouncing: prevent scanning same barcode within 2 seconds
-    if (currentTime - lastScanTime < 2000) {
-      logger.debug('Barcode scan ignored due to debouncing', { result, timeSince: currentTime - lastScanTime });
+    // Enhanced debouncing and duplicate detection
+    if (isProcessingScan || 
+        (currentTime - lastScanTime < 5000) || 
+        trimmedResult === lastScannedCode) {
+      logger.debug('Barcode scan ignored', { 
+        result: trimmedResult, 
+        isProcessing: isProcessingScan,
+        timeSince: currentTime - lastScanTime,
+        isDuplicate: trimmedResult === lastScannedCode
+      });
       return;
     }
     
+    // Prevent further scans
+    setIsProcessingScan(true);
     setLastScanTime(currentTime);
-    setTicketId(result);
+    setLastScannedCode(trimmedResult);
+    setTicketId(trimmedResult);
     
-    logger.info('Barcode detected', { result });
-    toast.success('Barcode terdeteksi! Auto-scanning...');
+    logger.info('Barcode detected', { result: trimmedResult });
     
-    // Stop scanning and process result
+    // Stop scanning immediately to prevent multiple triggers
     stopBarcodeScanning();
     
     setLoading(true);
@@ -273,7 +285,7 @@ export default function TicketScannerPage() {
     
     try {
       const { data, error } = await supabase.rpc('scan_ticket', {
-        _ticket_order_id: result.trim(),
+        _ticket_order_id: trimmedResult,
         _scanner_user_id: scannerUser?.id
       });
 
@@ -287,23 +299,27 @@ export default function TicketScannerPage() {
       setLastScanResult(scanResult);
       
       if (scanResult.success) {
-        toast.success(`✅ ${scanResult.message}`);
-        logger.info('Barcode scan successful', { result, message: scanResult.message });
+        toast.success(`✅ Tiket Valid: ${scanResult.message}`);
+        logger.info('Barcode scan successful', { result: trimmedResult, message: scanResult.message });
         fetchScanHistory();
         fetchScanStats();
       } else {
-        toast.error(`❌ ${scanResult.message}`);
-        logger.warn('Barcode scan failed', { result, message: scanResult.message });
+        toast.error(`❌ Tiket Invalid: ${scanResult.message}`);
+        logger.warn('Barcode scan failed', { result: trimmedResult, message: scanResult.message });
       }
       
       setTicketId('');
     } catch (error: any) {
-      logger.error('Barcode scan processing error', { result, error });
-      toast.error(error.message || 'Terjadi kesalahan saat scanning');
+      logger.error('Barcode scan processing error', { result: trimmedResult, error });
+      toast.error(`Kesalahan: ${error.message || 'Terjadi kesalahan saat scanning'}`);
     } finally {
       setLoading(false);
+      // Reset processing state after a delay to allow for proper debouncing
+      setTimeout(() => {
+        setIsProcessingScan(false);
+      }, 1000);
     }
-  }, [lastScanTime, scannerUser?.id]);
+  }, [lastScanTime, lastScannedCode, isProcessingScan, scannerUser?.id]);
 
   const startBarcodeScanning = async () => {
     if (!barcodeSupported || !codeReaderRef.current) {
@@ -342,16 +358,16 @@ export default function TicketScannerPage() {
         selectedDeviceId,
         videoRef.current!,
         (result, error) => {
-          if (result) {
+          if (result && !isProcessingScan && isScanning) {
             handleBarcodeDetected(result.getText());
           }
-          if (error && error.name !== 'NotFoundException') {
+          if (error && error.name !== 'NotFoundException' && error.name !== 'ChecksumException') {
             logger.debug('Barcode scanning error (non-critical)', { error: error.message });
           }
         }
       );
       
-      toast.info('Arahkan kamera ke barcode tiket');
+      toast.info('📷 Arahkan kamera ke barcode tiket');
       
     } catch (error: any) {
       setIsScanning(false);
@@ -377,21 +393,26 @@ export default function TicketScannerPage() {
     setIsScanning(false);
     logger.info('Stopping barcode scanning');
     
-    if (codeReaderRef.current) {
-      try {
-        // Stop all video streams
-        if (videoRef.current && videoRef.current.srcObject) {
-          const stream = videoRef.current.srcObject as MediaStream;
-          stream.getTracks().forEach(track => track.stop());
-        }
-        logger.debug('ZXing reader stopped successfully');
-      } catch (error) {
-        logger.warn('Error stopping ZXing reader', { error });
+    try {
+      // Stop all video streams first
+      if (videoRef.current && videoRef.current.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream;
+        stream.getTracks().forEach(track => {
+          track.stop();
+          track.enabled = false;
+        });
+        videoRef.current.srcObject = null;
+        videoRef.current.load(); // Force reload to clear any cached stream
       }
-    }
-
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
+      
+      // Recreate the reader to ensure clean state
+      if (codeReaderRef.current) {
+        codeReaderRef.current = new BrowserMultiFormatReader();
+      }
+      
+      logger.debug('ZXing reader and camera streams stopped successfully');
+    } catch (error) {
+      logger.warn('Error stopping ZXing reader', { error });
     }
   };
 
