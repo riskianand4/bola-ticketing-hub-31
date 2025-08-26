@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 interface CartItem {
   id: string;
@@ -40,7 +40,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   });
 
   // Save to localStorage whenever items change
-  React.useEffect(() => {
+  useEffect(() => {
     try {
       localStorage.setItem('shopping-cart', JSON.stringify(items));
     } catch (error) {

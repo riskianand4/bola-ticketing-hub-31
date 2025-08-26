@@ -11,6 +11,7 @@ import { useCart } from "@/context/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { LoginDialog } from "@/components/ui/login-dialog";
+import { PriceAlertButton } from '@/components/PriceAlertButton';
 
 export default function ShopPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -267,16 +268,23 @@ export default function ShopPage() {
                       Stok: {product.stock_quantity} item
                     </div>
 
-                    {/* Add to Cart Button */}
-                    <Button 
-                      className="w-full" 
-                      size="sm"
-                      disabled={product.stock_quantity === 0}
-                      onClick={() => addToCart(product.id)}
-                    >
-                      <ShoppingCart className="h-4 w-4 mr-2" />
-                      {product.stock_quantity > 0 ? "Tambah ke Keranjang" : "Stok Habis"}
-                    </Button>
+                    {/* Action Buttons */}
+                    <div className="space-y-2">
+                      <PriceAlertButton
+                        merchandiseId={product.id}
+                        currentPrice={product.price}
+                        merchandiseName={product.name}
+                      />
+                      <Button 
+                        className="w-full" 
+                        size="sm"
+                        disabled={product.stock_quantity === 0}
+                        onClick={() => addToCart(product.id)}
+                      >
+                        <ShoppingCart className="h-4 w-4 mr-2" />
+                        {product.stock_quantity > 0 ? "Tambah ke Keranjang" : "Stok Habis"}
+                      </Button>
+                    </div>
                   </div>
               </CardContent>
             </Card>
