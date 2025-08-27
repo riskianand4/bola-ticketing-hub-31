@@ -29,7 +29,7 @@ export function AdminMobileBottomNav({ activeTab, onTabChange }: AdminMobileBott
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border h-14 flex items-center justify-around px-1 z-50 md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border h-16 flex items-center justify-around px-1 z-50 md:hidden">
       {mainNavItems.map((item) => {
         const isActive = activeTab === item.id;
         const Icon = item.icon;
@@ -40,15 +40,15 @@ export function AdminMobileBottomNav({ activeTab, onTabChange }: AdminMobileBott
             variant="ghost"
             size="sm"
             className={cn(
-              "flex flex-col items-center justify-center space-y-0.5 px-1 py-1 h-12 min-w-0 flex-1",
+              "flex flex-col items-center justify-center space-y-0.5 px-2 py-2 h-14 min-w-0 flex-1",
               isActive 
                 ? "text-primary bg-primary/10" 
                 : "text-muted-foreground hover:text-foreground"
             )}
             onClick={() => handleTabClick(item.id)}
           >
-            <Icon className="h-4 w-4" />
-            <span className="text-xs font-medium truncate">{item.label}</span>
+            <Icon className="h-3 w-3" />
+            <span className="text-[10px] font-medium truncate">{item.label}</span>
           </Button>
         );
       })}

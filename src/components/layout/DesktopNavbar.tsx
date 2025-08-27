@@ -35,13 +35,21 @@ const navItems = [
 export function DesktopNavbar({ currentPath }: DesktopNavbarProps) {
   const { getTotalItems } = useCart();
   const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user ?? null);
-      }
-    );
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 0);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+    });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
@@ -60,14 +68,25 @@ export function DesktopNavbar({ currentPath }: DesktopNavbarProps) {
     }
   };
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-card border-b border-border h-16">
-      <div className="container mx-auto flex items-center justify-between h-full px-6">
-        {/* Logo */}
+    <header
+      className={`fixed top-0 left-0 right-0 z-50  border-b border-border h-16 ${
+        scrolled
+          ? "backdrop-blur-md  dark:bg-neutral-900/70 border-border/50 shadow-sm"
+          : "bg-transparent border-transparent"
+      }`}
+    >
+      <div className=" mx-auto flex items-center justify-between h-full px-6">
         <Link to="/" className="flex items-center space-x-3">
-          <img src="/src/assets/persiraja-logo.png" alt="Persiraja" className="w-10 h-10" />
+          <img
+            src="/icons/persiraja-logo.png"
+            alt="Persiraja"
+            className="w-10 h-10"
+          />
           <div className="flex flex-col">
             <div className="text-xl font-bold text-primary">PERSIRAJA</div>
-            <span className="text-xs text-secondary font-semibold">OFFICIAL TICKETING</span>
+            <span className="text-xs text-secondary font-semibold">
+              OFFICIAL TICKETING
+            </span>
           </div>
         </Link>
 
@@ -75,15 +94,15 @@ export function DesktopNavbar({ currentPath }: DesktopNavbarProps) {
         <nav className="hidden lg:flex items-center space-x-8">
           {navItems.map((item) => {
             const isActive = currentPath === item.path;
-            
+
             return (
               <Link
                 key={item.path}
                 to={item.path}
                 className={cn(
                   "font-medium transition-colors relative",
-                  isActive 
-                    ? "text-primary" 
+                  isActive
+                    ? "text-primary"
                     : "text-foreground hover:text-primary"
                 )}
               >
@@ -112,11 +131,13 @@ export function DesktopNavbar({ currentPath }: DesktopNavbarProps) {
               </Button>
             </Link>
           ) : (
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className="h-9 w-9"
-              onClick={() => toast.info("Silakan login untuk mengakses keranjang")}
+              onClick={() =>
+                toast.info("Silakan login untuk mengakses keranjang")
+              }
             >
               <ShoppingCart className="h-4 w-4" />
             </Button>

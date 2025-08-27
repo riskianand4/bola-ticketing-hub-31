@@ -7,7 +7,7 @@ import { useRoles } from "@/hooks/useRoles";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SimpleNotificationSystem } from "@/components/SimpleNotificationSystem";
-import persirajaLogo from "@/assets/persiraja-logo.png";
+import persirajaLogo from "/icons/persiraja-logo.png";
 export function AdminHeader() {
   const {
     user

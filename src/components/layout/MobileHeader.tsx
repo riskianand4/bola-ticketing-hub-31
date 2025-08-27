@@ -17,13 +17,21 @@ import { NotificationDropdown } from "@/components/NotificationDropdown";
 
 export function MobileHeader() {
   const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user ?? null);
-      }
-    );
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 0);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+    });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
@@ -43,12 +51,22 @@ export function MobileHeader() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-card border-b border-border h-12 flex items-center justify-between px-3">
+    <header
+      className={`fixed top-0 left-0 right-0 z-50  border-b border-border h-12 flex items-center justify-between px-3  ${
+        scrolled
+          ? "backdrop-blur-md  dark:bg-neutral-900/70 border-border/50 shadow-sm"
+          : "bg-transparent border-transparent"
+      }`}
+    >
       <Link to="/" className="flex items-center space-x-2">
-        <img src="/src/assets/persiraja-logo.png" alt="Persiraja" className="w-6 h-6" />
+        <img
+          src="/icons/persiraja-logo.png"
+          alt="Persiraja"
+          className="w-6 h-6"
+        />
         <div className="text-sm font-bold text-primary">PERSIRAJA</div>
       </Link>
-      
+
       <div className="flex items-center space-x-1">
         {user ? (
           <Link to="/cart">
@@ -57,11 +75,13 @@ export function MobileHeader() {
             </Button>
           </Link>
         ) : (
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             className="h-7 w-7"
-            onClick={() => toast.info("Silakan login untuk mengakses keranjang")}
+            onClick={() =>
+              toast.info("Silakan login untuk mengakses keranjang")
+            }
           >
             <ShoppingCart className="h-3.5 w-3.5" />
           </Button>

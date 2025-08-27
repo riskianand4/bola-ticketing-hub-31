@@ -14,33 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      bundle_items: {
-        Row: {
-          bundle_id: string
-          created_at: string
-          id: string
-          item_id: string
-          item_type: string
-          quantity: number
-        }
-        Insert: {
-          bundle_id: string
-          created_at?: string
-          id?: string
-          item_id: string
-          item_type: string
-          quantity?: number
-        }
-        Update: {
-          bundle_id?: string
-          created_at?: string
-          id?: string
-          item_id?: string
-          item_type?: string
-          quantity?: number
-        }
-        Relationships: []
-      }
       cart_items: {
         Row: {
           color: string | null
@@ -607,81 +580,6 @@ export type Database = {
         }
         Relationships: []
       }
-      price_alerts: {
-        Row: {
-          created_at: string
-          current_price: number
-          id: string
-          is_active: boolean | null
-          merchandise_id: string
-          target_price: number
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          current_price: number
-          id?: string
-          is_active?: boolean | null
-          merchandise_id: string
-          target_price: number
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          current_price?: number
-          id?: string
-          is_active?: boolean | null
-          merchandise_id?: string
-          target_price?: number
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      product_bundles: {
-        Row: {
-          bundle_price: number
-          created_at: string
-          description: string | null
-          discount_percentage: number | null
-          id: string
-          is_active: boolean | null
-          name: string
-          original_price: number
-          updated_at: string
-          valid_from: string
-          valid_until: string | null
-        }
-        Insert: {
-          bundle_price: number
-          created_at?: string
-          description?: string | null
-          discount_percentage?: number | null
-          id?: string
-          is_active?: boolean | null
-          name: string
-          original_price: number
-          updated_at?: string
-          valid_from?: string
-          valid_until?: string | null
-        }
-        Update: {
-          bundle_price?: number
-          created_at?: string
-          description?: string | null
-          discount_percentage?: number | null
-          id?: string
-          is_active?: boolean | null
-          name?: string
-          original_price?: number
-          updated_at?: string
-          valid_from?: string
-          valid_until?: string | null
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           address: string | null
@@ -1067,10 +965,6 @@ export type Database = {
           is_active: boolean
           username: string
         }[]
-      }
-      check_price_alerts: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
       }
       cleanup_duplicate_roles: {
         Args: Record<PropertyKey, never>

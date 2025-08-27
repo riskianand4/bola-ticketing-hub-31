@@ -10,7 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import persirajaLogo from '@/assets/persiraja-logo.png';
+import persirajaLogo from '/icons/persiraja-logo.png';
 interface Message {
   id: string;
   role: 'user' | 'assistant';
@@ -50,7 +50,6 @@ export default function AssistantPage() {
     }
   }, []);
 
-  // Fetch user profile for avatar
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (user?.id) {
@@ -130,20 +129,21 @@ export default function AssistantPage() {
   const handleQuickQuestion = (question: string) => {
     setInput(question);
   };
-  return <div className="min-h-screen bg-background flex flex-col">
-      {/* Messages Area */}
+
+  return <div className="min-h-screen bg-background flex flex-col mt-20">
       <ScrollArea className="flex-1 [&>div>div]:!scrollbar-none">
         <div className="w-full px-3 py-4 md:px-4 md:py-6">
           <div className="space-y-3 md:space-y-4">
             {messages.map(message => <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`flex gap-2 md:gap-3 max-w-[85%] md:max-w-[80%] ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
                   <div className="flex-shrink-0 mt-1">
-                    {message.role === 'assistant' ? <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-white flex items-center justify-center overflow-hidden border border-primary/20">
-                        <img src={persirajaLogo} alt="Persiraja" className="w-4 h-4 md:w-6 md:h-6 object-contain" />
+                    {message.role === 'assistant' ? <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-gray-500 flex items-center justify-center overflow-hidden border border-primary/20">
+                        <img src={persirajaLogo} alt="Persiraja" className="w-6 h-6 md:w-8 md:h-8 object-contain" />
                       </div> : <div className="w-6 h-6 md:w-8 md:h-8 rounded-full overflow-hidden bg-secondary text-secondary-foreground flex items-center justify-center">
                         {userProfile?.avatar_url ? <img src={userProfile.avatar_url} alt="User avatar" className="w-full h-full object-cover" /> : <User className="w-3 h-3 md:w-4 md:h-4" />}
                       </div>}
                   </div>
+                  
                   <div className={`rounded-2xl px-3 py-2 md:px-4 md:py-3 ${message.role === 'assistant' ? 'bg-muted text-foreground' : 'bg-primary text-primary-foreground'}`}>
                     {message.role === 'assistant' ? <div className="prose prose-neutral dark:prose-invert max-w-none text-xs md:text-sm
                         prose-p:mb-2 prose-p:leading-relaxed prose-p:text-xs md:prose-p:text-sm prose-p:indent-0
@@ -232,8 +232,8 @@ export default function AssistantPage() {
             {isLoading && <div className="flex justify-start">
                 <div className="flex gap-2 md:gap-3 max-w-[85%] md:max-w-[80%]">
                   <div className="flex-shrink-0 mt-1">
-                    <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-white flex items-center justify-center overflow-hidden border border-primary/20">
-                      <img src={persirajaLogo} alt="Persiraja" className="w-4 h-4 md:w-6 md:h-6 object-contain" />
+                    <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-gray-600 flex items-center justify-center overflow-hidden border border-primary/20">
+                      <img src={persirajaLogo} alt="Persiraja" className="w-5 h-5 md:w-6 md:h-6 object-contain" />
                     </div>
                   </div>
                   <div className="rounded-2xl px-3 py-2 md:px-4 md:py-3 bg-muted">
@@ -255,7 +255,7 @@ export default function AssistantPage() {
            {/* Quick Questions - Show when chat is empty or after welcome message */}
            {messages.length <= 1 && <div className="mb-3 md:mb-4">
                 <div className="grid grid-cols-4 gap-2">
-                  {quickQuestions.map((question, index) => <button key={index} onClick={() => handleQuickQuestion(question)} className="p-2 text-xs md:text-sm text-left bg-muted hover:bg-muted/80 rounded-lg transition-colors border border-border/50 hover:border-border truncate" disabled={isLoading}>
+                  {quickQuestions.map((question, index) => <button key={index} onClick={() => handleQuickQuestion(question)} className="p-2 text-xs md:text-xs text-left bg-muted hover:bg-muted/80 rounded-lg transition-colors border border-border/50 hover:border-border truncate" disabled={isLoading}>
                       {question}
                     </button>)}
                 </div>
@@ -263,10 +263,10 @@ export default function AssistantPage() {
            
            {/* Input Form */}
            <div className="relative">
-             <div className="flex items-center gap-2 md:gap-3 bg-muted rounded-lg px-3 py-2 md:px-4 md:py-3">
-               <Input value={input} onChange={e => setInput(e.target.value)} onKeyPress={handleKeyPress} placeholder="Ketik pertanyaan..." disabled={isLoading} className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/70 text-sm md:text-base" />
-               <Button onClick={sendMessage} disabled={!input.trim() || isLoading} size="sm" className="rounded-md px-2 md:px-3 h-8 md:h-9">
-                 {isLoading ? <Loader2 className="w-3 h-3 md:w-4 md:h-4 animate-spin" /> : <Send className="w-3 h-3 md:w-4 md:h-4" />}
+             <div className="flex items-center gap-2 md:gap-3 bg-muted rounded-lg px-3 py-0 md:px-4 md:py-0">
+               <Input value={input} onChange={e => setInput(e.target.value)} onKeyPress={handleKeyPress} placeholder="Ketik pertanyaan..." disabled={isLoading} className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/70 text-xs md:text-xs" />
+               <Button onClick={sendMessage} disabled={!input.trim() || isLoading} size="sm" className="rounded-md px-2 md:px-3 h-8 md:h-8 md:w-8">
+                 {isLoading ? <Loader2 className="w-3 h-3 md:w-4 md:h-4 animate-spin" /> : <Send className="w-2 h-2 md:w-3 md:h-3 mr-1" />}
                </Button>
              </div>
            </div>

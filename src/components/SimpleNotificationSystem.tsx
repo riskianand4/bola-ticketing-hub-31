@@ -91,7 +91,7 @@ export const SimpleNotificationSystem = () => {
 
         {/* Notification Panel */}
         {isOpen && (
-          <Card className="absolute top-full right-0 mt-2 w-80 max-h-96 shadow-lg z-50">
+          <Card className="absolute top-full right-0  mt-2 w-80 max-h-96 shadow-lg z-50">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold">Notifikasi</h3>

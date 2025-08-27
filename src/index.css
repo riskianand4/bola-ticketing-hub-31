@@ -2,12 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
 @layer base {
-  /* Default Theme (Current Persiraja) */
   :root,
   .theme-default {
     --background: 216 14% 10%;           /* Dark Gray (#1A1A1A) */
@@ -22,13 +17,13 @@ All colors MUST be HSL.
     --primary: 0 100% 40%;               /* Persiraja Red (#CC0000) */
     --primary-foreground: 0 0% 100%;     /* White text */
 
-    --secondary: 43 85% 35%;             /* Persiraja Gold (#B8860B) */
+    --secondary: 20 85% 35%;             /* Persiraja Gold (#B8860B) */
     --secondary-foreground: 0 0% 100%;   /* White text */
 
     --muted: 0 0% 25%;                   /* Dark Gray (#404040) */
     --muted-foreground: 0 0% 80%;        /* Light Gray (#CCCCCC) */
 
-    --accent: 43 85% 35%;                /* Gold accent */
+    --accent: 20 85% 35%;                /* Gold accent */
     --accent-foreground: 0 0% 100%;      /* White text */
 
     --destructive: 0 84% 60%;            /* Error red */
@@ -56,7 +51,6 @@ All colors MUST be HSL.
     --sidebar-ring: 0 100% 40%;          /* Red ring */
   }
 
-  /* Anichin Theme (Orange-Red Accents) */
   .theme-anichin {
     --background: 210 13% 7%;            /* Very Dark Blue-Gray */
     --foreground: 0 0% 100%;             /* White text */
@@ -104,7 +98,6 @@ All colors MUST be HSL.
     --sidebar-ring: 14 100% 57%;         /* Orange-Red ring */
   }
 
-  /* Light Theme */
   .theme-light {
     --background: 0 0% 100%;              /* Pure White */
     --foreground: 0 0% 10%;               /* Almost Black */
@@ -152,7 +145,6 @@ All colors MUST be HSL.
     --sidebar-ring: 0 100% 50%;           /* Red ring */
   }
 
-  /* Football Theme (Modern & Vibrant) */
   .theme-football {
     --background: 200 50% 8%;             /* Deep Navy Blue */
     --foreground: 0 0% 100%;              /* White text */
@@ -265,4 +257,13 @@ All colors MUST be HSL.
   .mobile-subtitle {
     @apply text-sm text-muted-foreground;
   }
+}
+
+* {
+  -ms-overflow-style: none; 
+  scrollbar-width: none; 
+}
+
+*::-webkit-scrollbar {
+  display: none; 
 }

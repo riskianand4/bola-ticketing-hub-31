@@ -106,10 +106,10 @@ export default function MyClubPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background pt-4 md:pt-8">
+    <div className="min-h-screen bg-background pt-16 sm:pt-20 md:pt-28">
       <div className="container mx-auto px-3 md:px-4">
         {/* Header */}
-        <div className="text-center mb-6 md:mb-12">
+        <div className="text-center mb-6 md:mb-12  ">
           <h1 className="text-2xl md:text-4xl font-bold text-foreground mb-2 mobile-title">My Club</h1>
           <p className="text-sm md:text-lg text-muted-foreground mobile-compact max-w-2xl mx-auto">
             Kenali tim Persiraja - Pemain, pelatih, dan manajemen yang berdedikasi untuk kejayaan club

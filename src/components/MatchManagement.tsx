@@ -1,17 +1,29 @@
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Calendar, Edit, Plus, Trash2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Calendar, Edit, Plus, Trash2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { format } from "date-fns";
+import { id } from "date-fns/locale";
 
 interface Match {
   id: string;
@@ -34,33 +46,33 @@ export const MatchManagement = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMatch, setEditingMatch] = useState<Match | null>(null);
   const [formData, setFormData] = useState({
-    home_team: 'Persiraja Banda Aceh',
-    away_team: '',
-    match_date: '',
-    venue: '',
-    competition: '',
-    home_score: '',
-    away_score: '',
-    status: 'scheduled',
-    home_team_logo: '',
-    away_team_logo: ''
+    home_team: "Persiraja Banda Aceh",
+    away_team: "",
+    match_date: "",
+    venue: "",
+    competition: "",
+    home_score: "",
+    away_score: "",
+    status: "scheduled",
+    home_team_logo: "",
+    away_team_logo: "",
   });
   const [isPostponeDialogOpen, setIsPostponeDialogOpen] = useState(false);
-  const [postponeDate, setPostponeDate] = useState('');
+  const [postponeDate, setPostponeDate] = useState("");
 
   const fetchMatches = async () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('matches')
-        .select('*')
-        .order('match_date', { ascending: false });
+        .from("matches")
+        .select("*")
+        .order("match_date", { ascending: false });
 
       if (error) throw error;
       setMatches(data || []);
     } catch (error: any) {
-      console.error('Error fetching matches:', error);
-      toast.error('Gagal memuat data pertandingan');
+      console.error("Error fetching matches:", error);
+      toast.error("Gagal memuat data pertandingan");
     } finally {
       setLoading(false);
     }
@@ -70,19 +82,23 @@ export const MatchManagement = () => {
     const now = new Date();
     const match = new Date(matchDate);
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const matchDay = new Date(match.getFullYear(), match.getMonth(), match.getDate());
-    
-    if (matchDay > today) return 'scheduled';
-    if (matchDay.getTime() === today.getTime()) return 'live';
-    return 'finished';
+    const matchDay = new Date(
+      match.getFullYear(),
+      match.getMonth(),
+      match.getDate()
+    );
+
+    if (matchDay > today) return "scheduled";
+    if (matchDay.getTime() === today.getTime()) return "live";
+    return "finished";
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       const autoStatus = getAutoStatus(formData.match_date);
-      
+
       const matchData = {
         home_team: formData.home_team,
         away_team: formData.away_team,
@@ -93,24 +109,22 @@ export const MatchManagement = () => {
         away_score: formData.away_score ? parseInt(formData.away_score) : null,
         status: autoStatus,
         home_team_logo: formData.home_team_logo || null,
-        away_team_logo: formData.away_team_logo || null
+        away_team_logo: formData.away_team_logo || null,
       };
 
       if (editingMatch) {
         const { error } = await supabase
-          .from('matches')
+          .from("matches")
           .update(matchData)
-          .eq('id', editingMatch.id);
-        
+          .eq("id", editingMatch.id);
+
         if (error) throw error;
-        toast.success('Pertandingan berhasil diperbarui');
+        toast.success("Pertandingan berhasil diperbarui");
       } else {
-        const { error } = await supabase
-          .from('matches')
-          .insert([matchData]);
-        
+        const { error } = await supabase.from("matches").insert([matchData]);
+
         if (error) throw error;
-        toast.success('Pertandingan berhasil ditambahkan');
+        toast.success("Pertandingan berhasil ditambahkan");
       }
 
       setIsDialogOpen(false);
@@ -118,8 +132,8 @@ export const MatchManagement = () => {
       resetForm();
       fetchMatches();
     } catch (error: any) {
-      console.error('Error saving match:', error);
-      toast.error('Gagal menyimpan pertandingan');
+      console.error("Error saving match:", error);
+      toast.error("Gagal menyimpan pertandingan");
     }
   };
 
@@ -128,115 +142,170 @@ export const MatchManagement = () => {
     setFormData({
       home_team: match.home_team,
       away_team: match.away_team,
-      match_date: format(new Date(match.match_date), 'yyyy-MM-dd\'T\'HH:mm'),
-      venue: match.venue || '',
-      competition: match.competition || '',
-      home_score: match.home_score?.toString() || '',
-      away_score: match.away_score?.toString() || '',
+      match_date: format(new Date(match.match_date), "yyyy-MM-dd'T'HH:mm"),
+      venue: match.venue || "",
+      competition: match.competition || "",
+      home_score: match.home_score?.toString() || "",
+      away_score: match.away_score?.toString() || "",
       status: match.status,
-      home_team_logo: match.home_team_logo || '',
-      away_team_logo: match.away_team_logo || ''
+      home_team_logo: match.home_team_logo || "",
+      away_team_logo: match.away_team_logo || "",
     });
     setIsDialogOpen(true);
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Yakin ingin menghapus pertandingan ini?')) return;
-    
+    if (!confirm("Yakin ingin menghapus pertandingan ini?")) return;
+
     try {
-      const { error } = await supabase
-        .from('matches')
-        .delete()
-        .eq('id', id);
-      
+      const { error } = await supabase.from("matches").delete().eq("id", id);
+
       if (error) throw error;
-      toast.success('Pertandingan berhasil dihapus');
+      toast.success("Pertandingan berhasil dihapus");
       fetchMatches();
     } catch (error: any) {
-      console.error('Error deleting match:', error);
-      toast.error('Gagal menghapus pertandingan');
+      console.error("Error deleting match:", error);
+      toast.error("Gagal menghapus pertandingan");
     }
   };
 
   const handlePostpone = async (match: Match) => {
     setEditingMatch(match);
-    setPostponeDate('');
+    setPostponeDate("");
     setIsPostponeDialogOpen(true);
   };
 
   const handleConfirmPostpone = async () => {
     if (!editingMatch || !postponeDate) return;
-    
+
     try {
       const { error } = await supabase
-        .from('matches')
-        .update({ 
+        .from("matches")
+        .update({
           match_date: postponeDate,
-          status: 'postponed'
+          status: "postponed",
         })
-        .eq('id', editingMatch.id);
-      
+        .eq("id", editingMatch.id);
+
       if (error) throw error;
-      toast.success('Pertandingan berhasil ditunda');
+      toast.success("Pertandingan berhasil ditunda");
       setIsPostponeDialogOpen(false);
       setEditingMatch(null);
-      setPostponeDate('');
+      setPostponeDate("");
       fetchMatches();
     } catch (error: any) {
-      console.error('Error postponing match:', error);
-      toast.error('Gagal menunda pertandingan');
+      console.error("Error postponing match:", error);
+      toast.error("Gagal menunda pertandingan");
     }
   };
 
   const handleCancel = async (matchId: string) => {
-    if (!confirm('Yakin ingin membatalkan pertandingan ini?')) return;
-    
+    if (!confirm("Yakin ingin membatalkan pertandingan ini?")) return;
+
     try {
       const { error } = await supabase
-        .from('matches')
-        .update({ status: 'cancelled' })
-        .eq('id', matchId);
-      
+        .from("matches")
+        .update({ status: "cancelled" })
+        .eq("id", matchId);
+
       if (error) throw error;
-      toast.success('Pertandingan berhasil dibatalkan');
+      toast.success("Pertandingan berhasil dibatalkan");
       fetchMatches();
     } catch (error: any) {
-      console.error('Error cancelling match:', error);
-      toast.error('Gagal membatalkan pertandingan');
+      console.error("Error cancelling match:", error);
+      toast.error("Gagal membatalkan pertandingan");
     }
   };
 
   const resetForm = () => {
     setFormData({
-      home_team: 'Persiraja Banda Aceh',
-      away_team: '',
-      match_date: '',
-      venue: '',
-      competition: '',
-      home_score: '',
-      away_score: '',
-      status: 'scheduled',
-      home_team_logo: '',
-      away_team_logo: ''
+      home_team: "Persiraja Banda Aceh",
+      away_team: "",
+      match_date: "",
+      venue: "",
+      competition: "",
+      home_score: "",
+      away_score: "",
+      status: "scheduled",
+      home_team_logo: "",
+      away_team_logo: "",
     });
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'scheduled':
-        return <Badge variant="outline" className="bg-blue-50 text-blue-700">Mendatang</Badge>;
-      case 'live':
-        return <Badge variant="outline" className="bg-red-50 text-red-700">Live</Badge>;
-      case 'finished':
-        return <Badge variant="outline" className="bg-green-50 text-green-700">Selesai</Badge>;
-      case 'postponed':
-        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700">Ditunda</Badge>;
-      case 'cancelled':
-        return <Badge variant="outline" className="bg-gray-50 text-gray-700">Dibatalkan</Badge>;
+      case "scheduled":
+        return (
+          <Badge variant="outline" className="bg-blue-50 text-blue-700">
+            Mendatang
+          </Badge>
+        );
+      case "live":
+        return (
+          <Badge variant="outline" className="bg-red-50 text-red-700">
+            Live
+          </Badge>
+        );
+      case "finished":
+        return (
+          <Badge variant="outline" className="bg-green-50 text-green-700">
+            Selesai
+          </Badge>
+        );
+      case "postponed":
+        return (
+          <Badge variant="outline" className="bg-yellow-50 text-yellow-700">
+            Ditunda
+          </Badge>
+        );
+      case "cancelled":
+        return (
+          <Badge variant="outline" className="bg-gray-50 text-gray-700">
+            Dibatalkan
+          </Badge>
+        );
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
   };
+  useEffect(() => {
+    if (!matches.length) return;
+
+    const interval = setInterval(async () => {
+      const now = new Date().getTime();
+
+      for (const m of matches) {
+        if (m.status === "live") {
+          const kickoff = new Date(m.match_date).getTime();
+          const diffMinutes = Math.floor((now - kickoff) / (1000 * 60));
+          if (diffMinutes >= 90) {
+            try {
+              const { error } = await supabase
+                .from("matches")
+                .update({ status: "finished" })
+                .eq("id", m.id);
+
+              if (error) throw error;
+
+              setMatches((prev) =>
+                prev.map((x) =>
+                  x.id === m.id ? { ...x, status: "finished" } : x
+                )
+              );
+
+              toast.success(
+                `Pertandingan ${m.home_team} vs ${m.away_team} selesai`
+              );
+            } catch (err) {
+              console.error("Error updating match status:", err);
+            }
+          }
+        }
+      }
+    }, 60 * 1000); // cek tiap 1 menit
+
+    return () => clearInterval(interval);
+  }, [matches]);
 
   useEffect(() => {
     fetchMatches();
@@ -256,7 +325,13 @@ export const MatchManagement = () => {
         <h2 className="text-xl md:text-3xl font-bold">Kelola Pertandingan</h2>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" onClick={() => { resetForm(); setEditingMatch(null); }}>
+            <Button
+              size="sm"
+              onClick={() => {
+                resetForm();
+                setEditingMatch(null);
+              }}
+            >
               <Plus className="h-3 w-3 mr-1" />
               Tambah
             </Button>
@@ -264,7 +339,7 @@ export const MatchManagement = () => {
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>
-                {editingMatch ? 'Edit Pertandingan' : 'Tambah Pertandingan'}
+                {editingMatch ? "Edit Pertandingan" : "Tambah Pertandingan"}
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -274,7 +349,9 @@ export const MatchManagement = () => {
                   <Input
                     id="home_team"
                     value={formData.home_team}
-                    onChange={(e) => setFormData({ ...formData, home_team: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, home_team: e.target.value })
+                    }
                     required
                   />
                 </div>
@@ -283,7 +360,9 @@ export const MatchManagement = () => {
                   <Input
                     id="away_team"
                     value={formData.away_team}
-                    onChange={(e) => setFormData({ ...formData, away_team: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, away_team: e.target.value })
+                    }
                     placeholder="Nama tim tamu"
                     required
                   />
@@ -296,7 +375,9 @@ export const MatchManagement = () => {
                   id="match_date"
                   type="datetime-local"
                   value={formData.match_date}
-                  onChange={(e) => setFormData({ ...formData, match_date: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, match_date: e.target.value })
+                  }
                   required
                 />
               </div>
@@ -306,7 +387,9 @@ export const MatchManagement = () => {
                 <Input
                   id="venue"
                   value={formData.venue}
-                  onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, venue: e.target.value })
+                  }
                   placeholder="Stadion"
                 />
               </div>
@@ -316,7 +399,9 @@ export const MatchManagement = () => {
                 <Input
                   id="competition"
                   value={formData.competition}
-                  onChange={(e) => setFormData({ ...formData, competition: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, competition: e.target.value })
+                  }
                   placeholder="Liga/Turnamen"
                 />
               </div>
@@ -327,7 +412,9 @@ export const MatchManagement = () => {
                   id="home_team_logo"
                   type="url"
                   value={formData.home_team_logo}
-                  onChange={(e) => setFormData({ ...formData, home_team_logo: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, home_team_logo: e.target.value })
+                  }
                   placeholder="https://example.com/home-logo.png"
                 />
               </div>
@@ -338,7 +425,9 @@ export const MatchManagement = () => {
                   id="away_team_logo"
                   type="url"
                   value={formData.away_team_logo}
-                  onChange={(e) => setFormData({ ...formData, away_team_logo: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, away_team_logo: e.target.value })
+                  }
                   placeholder="https://example.com/away-logo.png"
                 />
               </div>
@@ -351,7 +440,9 @@ export const MatchManagement = () => {
                     type="number"
                     min="0"
                     value={formData.home_score}
-                    onChange={(e) => setFormData({ ...formData, home_score: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, home_score: e.target.value })
+                    }
                     placeholder="0"
                   />
                 </div>
@@ -362,25 +453,36 @@ export const MatchManagement = () => {
                     type="number"
                     min="0"
                     value={formData.away_score}
-                    onChange={(e) => setFormData({ ...formData, away_score: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, away_score: e.target.value })
+                    }
                     placeholder="0"
                   />
                 </div>
                 <div>
                   <Label>Status (Otomatis)</Label>
                   <div className="p-2 border rounded-md bg-muted text-sm">
-                    {formData.match_date ? getAutoStatus(formData.match_date) === 'scheduled' ? 'Mendatang' :
-                     getAutoStatus(formData.match_date) === 'live' ? 'Live' : 'Selesai' : 'Pilih tanggal'}
+                    {formData.match_date
+                      ? getAutoStatus(formData.match_date) === "scheduled"
+                        ? "Mendatang"
+                        : getAutoStatus(formData.match_date) === "live"
+                        ? "Live"
+                        : "Selesai"
+                      : "Pilih tanggal"}
                   </div>
                 </div>
               </div>
 
               <div className="flex justify-end space-x-2 pt-4">
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsDialogOpen(false)}
+                >
                   Batal
                 </Button>
                 <Button type="submit">
-                  {editingMatch ? 'Perbarui' : 'Simpan'}
+                  {editingMatch ? "Perbarui" : "Simpan"}
                 </Button>
               </div>
             </form>
@@ -392,7 +494,10 @@ export const MatchManagement = () => {
         <CardContent className="p-0">
           <div className="space-y-1">
             {matches.map((match) => (
-              <div key={match.id} className="p-4 border-b border-border/50 hover:bg-muted/50">
+              <div
+                key={match.id}
+                className="p-4 border-b border-border/50 hover:bg-muted/50"
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-4 mb-2">
@@ -401,23 +506,26 @@ export const MatchManagement = () => {
                       </div>
                       {getStatusBadge(match.status)}
                     </div>
-                    
+
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        {format(new Date(match.match_date), 'dd MMM yyyy, HH:mm', { locale: id })}
+                        {format(
+                          new Date(match.match_date),
+                          "dd MMM yyyy, HH:mm",
+                          { locale: id }
+                        )}
                       </div>
-                      {match.venue && (
-                        <div>Venue: {match.venue}</div>
-                      )}
+                      {match.venue && <div>Venue: {match.venue}</div>}
                       {match.competition && (
                         <div>Liga: {match.competition}</div>
                       )}
-                      {(match.home_score !== null && match.away_score !== null) && (
-                        <div className="font-medium">
-                          Skor: {match.home_score} - {match.away_score}
-                        </div>
-                      )}
+                      {match.home_score !== null &&
+                        match.away_score !== null && (
+                          <div className="font-medium">
+                            Skor: {match.home_score} - {match.away_score}
+                          </div>
+                        )}
                     </div>
                   </div>
 
@@ -430,7 +538,7 @@ export const MatchManagement = () => {
                     >
                       <Edit className="h-3 w-3" />
                     </Button>
-                    {match.status === 'scheduled' && (
+                    {match.status === "scheduled" && (
                       <>
                         <Button
                           variant="outline"
@@ -467,7 +575,10 @@ export const MatchManagement = () => {
       </Card>
 
       {/* Postpone Dialog */}
-      <Dialog open={isPostponeDialogOpen} onOpenChange={setIsPostponeDialogOpen}>
+      <Dialog
+        open={isPostponeDialogOpen}
+        onOpenChange={setIsPostponeDialogOpen}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Tunda Pertandingan</DialogTitle>
@@ -484,17 +595,14 @@ export const MatchManagement = () => {
               />
             </div>
             <div className="flex justify-end space-x-2">
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => setIsPostponeDialogOpen(false)}
               >
                 Batal
               </Button>
-              <Button 
-                onClick={handleConfirmPostpone}
-                disabled={!postponeDate}
-              >
+              <Button onClick={handleConfirmPostpone} disabled={!postponeDate}>
                 Tunda Pertandingan
               </Button>
             </div>

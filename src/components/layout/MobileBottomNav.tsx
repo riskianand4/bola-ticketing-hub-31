@@ -25,6 +25,7 @@ const navItems = [{
   label: "More",
   path: "/more"
 }];
+
 export function MobileBottomNav({
   currentPath
 }: MobileBottomNavProps) {

@@ -96,7 +96,7 @@ export default function GalleryPage() {
   const [selectedPhoto, setSelectedPhoto] = useState<any>(null);
 
   return (
-    <div className="min-h-screen bg-background pt-4 md:pt-8">
+    <div className="min-h-screen bg-background pt-16 sm:pt-20 md:pt-20">
       <div className="container mx-auto px-3 md:px-4">
         {/* Header */}
         <div className="text-center mb-6 md:mb-12">

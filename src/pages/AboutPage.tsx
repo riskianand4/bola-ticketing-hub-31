@@ -35,16 +35,15 @@ export default function AboutPage() {
     value: "SKULL (Suporter Kutaraja Untuk Lantak Laju)",
     icon: Users
   }];
-  return <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background pt-10 md:pt-20">
       <div className="container mx-auto px-4 py-8">
         {/* Hero Section */}
         <div className="text-center mb-12">
           <div className="mb-6">
-            <img src="/src/assets/persiraja-logo.png" alt="Persiraja Logo" className="w-24 h-24 mx-auto mb-4" />
+            <img src="/icons/persiraja-logo.png" alt="Persiraja Logo" className="w-20 h-20  mx-auto mb-4" />
           </div>
-          <h1 className="text-4xl font-bold mb-4">Selamat Datang!</h1>
+          <h1 className="text-3xl font-bold mb-4">Selamat Datang!</h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Persatuan Sepak bola Indonesia Kutaraja Banda Aceh, kebanggaan tanah rencong yang telah mengharumkan nama Aceh di kancah sepak bola nasional sejak 1957.
           </p>
         </div>
 
@@ -108,7 +107,6 @@ export default function AboutPage() {
               </CardContent>
             </Card>
 
-            {/* Era Modern */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">

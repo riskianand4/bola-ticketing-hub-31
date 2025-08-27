@@ -96,74 +96,79 @@ export default function NewsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-background pt-16 sm:pt-20 md:pt-20">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-4">Berita Sepak Bola</h1>
-          <p className="text-muted-foreground text-lg">
+        <div className="mb-6 sm:mb-8 text-center">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 sm:mb-4">Berita Sepak Bola</h1>
+          <p className="text-muted-foreground text-sm sm:text-base md:text-lg px-4">
             Update terkini seputar dunia sepak bola Indonesia dan internasional
           </p>
         </div>
 
         {/* Search and Filters */}
-        <div className="mb-8 space-y-4">
+        <div className="mb-6 sm:mb-8 space-y-3 sm:space-y-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Cari berita..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="pl-10 w-full"
             />
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            {categories.map((category) => (
-              <Button
-                key={category.id}
-                variant={selectedCategory === category.id ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedCategory(category.id)}
-                className="rounded-full"
-              >
-                {category.label}
-              </Button>
-            ))}
+          {/* Category filters - Responsive scrollable on mobile */}
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            <div className="flex gap-2 flex-nowrap min-w-max">
+              {categories.map((category) => (
+                <Button
+                  key={category.id}
+                  variant={selectedCategory === category.id ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedCategory(category.id)}
+                  className="rounded-full text-xs sm:text-sm whitespace-nowrap flex-shrink-0"
+                >
+                  {category.label}
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* Featured Article (First article) */}
         {articlesToShow.length > 0 && (
           <Link to={`/news/${articlesToShow[0].id}`}>
-            <Card className="mb-8 group cursor-pointer hover:bg-card/80 transition-colors">
+            <Card className="mb-6 sm:mb-8 group cursor-pointer hover:bg-card/80 transition-colors">
               <CardContent className="p-0">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="aspect-video lg:aspect-square bg-muted overflow-hidden rounded-l-lg">
+                <div className="grid grid-cols-1 lg:grid-cols-2">
+                  <div className="aspect-video lg:aspect-square bg-muted overflow-hidden rounded-t-lg lg:rounded-l-lg lg:rounded-t-none">
                     <img 
                       src={articlesToShow[0].featured_image || "/placeholder.svg"} 
                       alt={articlesToShow[0].title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
-                  <div className="p-6 flex flex-col justify-center">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Badge variant="secondary">{articlesToShow[0].category || 'Berita'}</Badge>
-                      <span className="text-sm text-muted-foreground">
+                  <div className="p-4 sm:p-6 flex flex-col justify-center">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
+                      <Badge variant="secondary" className="text-xs sm:text-sm w-fit">
+                        {articlesToShow[0].category || 'Berita'}
+                      </Badge>
+                      <span className="text-xs sm:text-sm text-muted-foreground">
                         {new Date(articlesToShow[0].published_at).toLocaleDateString('id-ID')}
                       </span>
                     </div>
-                    <h2 className="text-3xl font-bold mb-4 group-hover:text-primary transition-colors">
+                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-3 sm:mb-4 group-hover:text-primary transition-colors leading-tight">
                       {articlesToShow[0].title}
                     </h2>
-                    <p className="text-muted-foreground mb-4 line-clamp-3">
+                    <p className="text-muted-foreground text-sm sm:text-base mb-3 sm:mb-4 line-clamp-2 sm:line-clamp-3">
                       {articlesToShow[0].excerpt}
                     </p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                      <span className="text-xs sm:text-sm text-muted-foreground">
                         Oleh {articlesToShow[0].profiles?.full_name || 'Admin'}
                       </span>
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground">
                         <Clock className="h-3 w-3" />
                         3 min
                       </div>
@@ -176,38 +181,40 @@ export default function NewsPage() {
         )}
 
         {/* Articles Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {articlesToShow.slice(1).map((article) => (
             <Link key={article.id} to={`/news/${article.id}`}>
               <Card className="group cursor-pointer hover:bg-card/80 transition-colors h-full">
                 <CardContent className="p-0">
-                  <div className="aspect-video bg-muted rounded-t-lg mb-4 overflow-hidden">
+                  <div className="aspect-video bg-muted rounded-t-lg mb-3 sm:mb-4 overflow-hidden">
                     <img 
                       src={article.featured_image || "/placeholder.svg"} 
                       alt={article.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
-                  <div className="p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge variant="secondary">{article.category || 'Berita'}</Badge>
+                  <div className="p-3 sm:p-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-2">
+                      <Badge variant="secondary" className="text-xs w-fit">
+                        {article.category || 'Berita'}
+                      </Badge>
                       <span className="text-xs text-muted-foreground">
                         {new Date(article.published_at).toLocaleDateString('id-ID')}
                       </span>
                     </div>
-                    <h3 className="font-bold text-lg mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                    <h3 className="font-bold text-sm sm:text-base lg:text-lg mb-2 group-hover:text-primary transition-colors line-clamp-2 leading-tight">
                       {article.title}
                     </h3>
-                    <p className="text-muted-foreground text-sm mb-3 line-clamp-3">
+                    <p className="text-muted-foreground text-xs sm:text-sm mb-3 line-clamp-2 sm:line-clamp-3">
                       {article.excerpt}
                     </p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                      <span className="text-xs text-muted-foreground truncate">
                         Oleh {article.profiles?.full_name || 'Admin'}
                       </span>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-between sm:justify-end gap-2">
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Clock className="h-3 w-3" />
+                          <Clock className="h-3 w-3 flex-shrink-0" />
                           3 min
                         </div>
                         <Button 
@@ -217,7 +224,7 @@ export default function NewsPage() {
                             e.preventDefault();
                             handleLikeArticle(article.id);
                           }}
-                          className="h-6 w-6 p-0 hover:text-red-500"
+                          className="h-6 w-6 p-0 hover:text-red-500 flex-shrink-0"
                         >
                           <Heart className="h-3 w-3" />
                         </Button>
@@ -232,22 +239,22 @@ export default function NewsPage() {
 
         {/* Loading Skeletons */}
         {isLoading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-4 sm:mt-6">
             {Array.from({ length: 6 }).map((_, index) => (
               <Card key={index}>
                 <CardContent className="p-0">
-                  <Skeleton className="aspect-video rounded-t-lg mb-4" />
-                  <div className="p-4 space-y-3">
+                  <Skeleton className="aspect-video rounded-t-lg mb-3 sm:mb-4" />
+                  <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
                     <div className="flex items-center gap-2">
-                      <Skeleton className="h-5 w-16" />
-                      <Skeleton className="h-4 w-20" />
+                      <Skeleton className="h-4 sm:h-5 w-12 sm:w-16" />
+                      <Skeleton className="h-3 sm:h-4 w-16 sm:w-20" />
                     </div>
-                    <Skeleton className="h-6 w-full" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-4 sm:h-6 w-full" />
+                    <Skeleton className="h-3 sm:h-4 w-full" />
+                    <Skeleton className="h-3 sm:h-4 w-3/4" />
                     <div className="flex justify-between items-center">
-                      <Skeleton className="h-4 w-24" />
-                      <Skeleton className="h-4 w-16" />
+                      <Skeleton className="h-3 sm:h-4 w-20 sm:w-24" />
+                      <Skeleton className="h-3 sm:h-4 w-12 sm:w-16" />
                     </div>
                   </div>
                 </CardContent>
@@ -258,9 +265,10 @@ export default function NewsPage() {
 
         {/* Load More Button */}
         {hasMoreArticles && !isLoading && (
-          <div className="text-center mt-12">
+          <div className="text-center mt-8 sm:mt-12">
             <Button 
-              size="lg" 
+              size="default"
+              className="w-full sm:w-auto"
               variant="outline" 
               onClick={handleLoadMore}
             >
@@ -270,12 +278,19 @@ export default function NewsPage() {
         )}
 
         {/* No Results */}
-        {filteredArticles.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground text-lg mb-4">
+        {filteredArticles.length === 0 && !isLoading && (
+          <div className="text-center py-8 sm:py-12 px-4">
+            <p className="text-muted-foreground text-base sm:text-lg mb-4">
               Tidak ada berita yang ditemukan
             </p>
-            <Button onClick={() => {setSearchQuery(""); setSelectedCategory("all"); setDisplayedArticles(7);}}>
+            <Button 
+              onClick={() => {
+                setSearchQuery(""); 
+                setSelectedCategory("all"); 
+                setDisplayedArticles(7);
+              }}
+              className="w-full sm:w-auto"
+            >
               Reset Filter
             </Button>
           </div>
@@ -288,6 +303,16 @@ export default function NewsPage() {
           description="Silakan login terlebih dahulu untuk menyukai artikel."
         />
       </div>
+      
+      <style>{`
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </div>
   );
 }

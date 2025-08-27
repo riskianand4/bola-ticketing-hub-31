@@ -21,16 +21,18 @@ export default function TicketsPage() {
 
   useEffect(() => {
     fetchMatches();
-    
+
     // Setup realtime subscription
     const channel = supabase
-      .channel('matches-tickets-changes')
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'matches' },
+      .channel("matches-tickets-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "matches" },
         () => fetchMatches()
       )
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'tickets' },
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "tickets" },
         () => fetchMatches()
       )
       .subscribe();
@@ -44,104 +46,116 @@ export default function TicketsPage() {
     try {
       const now = new Date();
       const { data, error } = await supabase
-        .from('matches')
-        .select(`
+        .from("matches")
+        .select(
+          `
           *,
           tickets(*)
-        `)
-        .order('match_date', { ascending: true });
+        `
+        )
+        .order("match_date", { ascending: true });
 
       if (error) {
-        console.error('Error fetching matches:', error);
+        console.error("Error fetching matches:", error);
       } else {
         // Kategorikan pertandingan berdasarkan status dan waktu
-        const categorizedMatches = (data || []).map(match => {
+        const categorizedMatches = (data || []).map((match) => {
           const matchDate = new Date(match.match_date);
-          const matchEndTime = new Date(matchDate.getTime() + (2 * 60 * 60 * 1000)); // Add 2 hours
-          
-          let ticketStatus = 'available';
-          
+          const matchEndTime = new Date(
+            matchDate.getTime() + 2 * 60 * 60 * 1000
+          ); // Add 2 hours
+
+          let ticketStatus = "available";
+
           // Jika pertandingan sudah selesai (status finished atau sudah lewat 2 jam)
-          if (match.status === 'finished' || now > matchEndTime) {
-            ticketStatus = 'expired';
+          if (match.status === "finished" || now > matchEndTime) {
+            ticketStatus = "expired";
           }
           // Jika pertandingan sedang berlangsung
-          else if (match.status === 'live' || (now >= matchDate && now <= matchEndTime)) {
-            ticketStatus = 'ongoing';
+          else if (
+            match.status === "live" ||
+            (now >= matchDate && now <= matchEndTime)
+          ) {
+            ticketStatus = "ongoing";
           }
           // Jika pertandingan belum dimulai dan masih scheduled
-          else if (match.status === 'scheduled' && now < matchDate) {
-            ticketStatus = 'available';
+          else if (match.status === "scheduled" && now < matchDate) {
+            ticketStatus = "available";
           }
 
           return {
             ...match,
-            ticketStatus
+            ticketStatus,
           };
         });
 
-        // Filter hanya pertandingan yang tiketnya masih tersedia atau sedang berlangsung
-        const availableMatches = categorizedMatches.filter(match => 
-          match.ticketStatus === 'available' || match.ticketStatus === 'ongoing'
+        const availableMatches = categorizedMatches.filter(
+          (match) =>
+            match.ticketStatus === "available" ||
+            match.ticketStatus === "ongoing"
         );
-        
+
         setMatches(availableMatches);
       }
     } catch (error) {
-      console.error('Error fetching matches:', error);
+      console.error("Error fetching matches:", error);
     }
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
     }).format(price);
   };
 
-  const filteredMatches = matches.filter(match => {
+  const filteredMatches = matches.filter((match) => {
     const hasTickets = match.tickets && match.tickets.length > 0;
-    const matchesFilter = selectedFilter === "all" || 
-                         (selectedFilter === "available" && hasTickets);
-    const matchesSearch = match.home_team.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         match.away_team.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         match.competition.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         match.venue.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFilter =
+      selectedFilter === "all" ||
+      (selectedFilter === "available" && hasTickets);
+    const matchesSearch =
+      match.home_team.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      match.away_team.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      match.competition.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      match.venue.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-background pt-16 sm:pt-20 md:pt-20">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-7xl">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-4">Tiket Pertandingan</h1>
-          <p className="text-muted-foreground text-lg">
-            Dapatkan tiket pertandingan sepak bola favorit Anda dengan mudah dan aman
+        <div className="mb-6 sm:mb-8 text-center">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 sm:mb-4">
+            Tiket Pertandingan
+          </h1>
+          <p className="text-muted-foreground text-sm sm:text-base md:text-lg px-4">
+            Dapatkan tiket pertandingan sepak bola favorit Anda dengan mudah dan
+            aman
           </p>
         </div>
 
-        {/* Search and Filters */}
-        <div className="mb-8 space-y-4">
+        <div className="mb-6 sm:mb-8 space-y-3 sm:space-y-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Cari pertandingan, tim, atau stadion..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="pl-10 text-sm sm:text-base"
             />
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
             {filters.map((filter) => (
               <Button
                 key={filter.id}
                 variant={selectedFilter === filter.id ? "default" : "outline"}
                 size="sm"
                 onClick={() => setSelectedFilter(filter.id)}
-                className="rounded-full"
+                className="rounded-full text-[10px] sm:text-sm px-3 sm:px-4 h-8 sm:h-9"
               >
                 {filter.label}
               </Button>
@@ -149,117 +163,182 @@ export default function TicketsPage() {
           </div>
         </div>
 
-        {/* Matches Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
           {filteredMatches.map((match) => (
-              <Card key={match.id} className="bg-card border-border overflow-hidden">
-                <CardContent className="p-0">
-                  {/* Match Header */}
-                  <div className="bg-primary/5 p-4 border-b border-border">
-                    <div className="flex justify-between items-start mb-2">
-                      <Badge variant="outline" className="text-xs">
-                        {match.competition}
+            <Card
+              key={match.id}
+              className="bg-card border-border overflow-hidden"
+            >
+              <CardContent className="p-0">
+                <div className="bg-primary/5 p-3 sm:p-4 border-b border-border">
+                  <div className="flex justify-between items-start mb-2 sm:mb-10">
+                    <Badge variant="outline" className="text-xs">
+                      {match.competition}
+                    </Badge>
+                    {match.ticketStatus === "expired" ? (
+                      <Badge
+                        variant="outline"
+                        className="bg-red-50 text-red-700 text-xs"
+                      >
+                        Kadaluarsa
                       </Badge>
-                      {/* Status Badge */}
-                      {match.ticketStatus === 'expired' ? (
-                        <Badge variant="outline" className="bg-red-50 text-red-700">Kadaluarsa</Badge>
-                      ) : match.ticketStatus === 'ongoing' ? (
-                        <Badge variant="destructive" className="animate-pulse">Sedang Berlangsung</Badge>
-                      ) : match.tickets && match.tickets.length > 0 ? (
-                        <Badge variant="default" className="bg-success">Tersedia</Badge>
-                      ) : (
-                        <Badge variant="secondary">Segera</Badge>
-                      )}
-                    </div>
-                    
-                    {/* Teams */}
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
-                          <span className="text-xs font-bold">{match.home_team.slice(0, 3).toUpperCase()}</span>
-                        </div>
-                        <div>
-                          <p className="font-bold text-sm">{match.home_team}</p>
-                          <p className="text-xs text-muted-foreground">Home</p>
-                        </div>
-                      </div>
-                      
-                      <div className="text-center">
-                        <p className="text-2xl font-bold text-primary">VS</p>
-                      </div>
-                      
-                      <div className="flex items-center space-x-3">
-                        <div>
-                          <p className="font-bold text-sm text-right">{match.away_team}</p>
-                          <p className="text-xs text-muted-foreground text-right">Away</p>
-                        </div>
-                        <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
-                          <span className="text-xs font-bold">{match.away_team.slice(0, 3).toUpperCase()}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Match Details */}
-                  <div className="p-4">
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span>{new Date(match.match_date).toLocaleDateString('id-ID')}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span>{new Date(match.match_date).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm col-span-2">
-                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <span>{match.venue}</span>
-                      </div>
-                    </div>
-
-                    {/* Pricing */}
-                    {match.tickets && match.tickets.length > 0 && (
-                      <div className="bg-muted/30 rounded-lg p-3 mb-4">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <p className="text-sm text-muted-foreground">Harga tiket</p>
-                            <p className="font-bold text-secondary">
-                              {formatPrice(Math.min(...match.tickets.map(t => t.price)))} - {formatPrice(Math.max(...match.tickets.map(t => t.price)))}
-                            </p>
-                          </div>
-                          <Users className="h-5 w-5 text-muted-foreground" />
-                        </div>
-                      </div>
+                    ) : match.ticketStatus === "ongoing" ? (
+                      <Badge
+                        variant="destructive"
+                        className="animate-pulse text-xs"
+                      >
+                        Berlangsung
+                      </Badge>
+                    ) : match.tickets && match.tickets.length > 0 ? (
+                      <Badge variant="default" className="bg-green-700 text-xs">
+                        Tersedia
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary" className="text-xs">
+                        Segera
+                      </Badge>
                     )}
-
-                    {/* Action Button */}
-                    <Button 
-                      className="w-full bg-primary hover:bg-primary/90" 
-                      size="lg"
-                      disabled={match.ticketStatus === 'expired' || !match.tickets || match.tickets.length === 0}
-                      onClick={() => {
-                        if (match.tickets && match.tickets.length > 0 && match.ticketStatus !== 'expired') {
-                          window.location.href = `/tickets/purchase/${match.id}`;
-                        }
-                      }}
-                    >
-                      {match.ticketStatus === 'expired' ? "Tiket Kadaluarsa" : 
-                       match.ticketStatus === 'ongoing' ? "Pertandingan Berlangsung" :
-                       match.tickets && match.tickets.length > 0 ? "Beli Tiket Sekarang" : "Segera Tersedia"}
-                    </Button>
                   </div>
-                </CardContent>
-              </Card>
+
+                  <div className="flex items-center justify-between mb-3 sm:mb-4">
+                    <div className="flex items-center space-x-2 sm:space-x-3 flex-1">
+                      <div className="w-8 h-8 sm:w-16 sm:h-10 bg-muted rounded-full flex items-center justify-center flex-shrink-0">
+                        <img
+                          src={match.home_team_logo}
+                          alt={match.home_team}
+                          className="w-10 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16 rounded-full object-cover border border-gray-600"
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-bold text-xs sm:text-sm truncate">
+                          {match.home_team}
+                        </p>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground">
+                          Home
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="text-center px-2 sm:px-4 flex-shrink-0">
+                      <p className="text-lg sm:text-2xl font-bold text-primary">
+                        VS
+                      </p>
+                    </div>
+
+                    <div className="flex items-center space-x-2 sm:space-x-3 flex-1">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-bold text-xs sm:text-sm text-right truncate">
+                          {match.away_team}
+                        </p>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground text-right">
+                          Away
+                        </p>
+                      </div>
+                      <div className="w-8 h-8 sm:w-16 sm:h-10 bg-muted rounded-full flex items-center justify-center flex-shrink-0">
+                        <span className="text-[10px] sm:text-xs font-bold">
+                          <img
+                            src={match.away_team_logo}
+                            alt={match.away_team}
+                            className="w-10 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16 rounded-full object-cover border border-gray-600"
+                          />
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Match Details */}
+                <div className="p-3 sm:p-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 mb-3 sm:mb-4">
+                    <div className="flex items-center gap-2 text-xs sm:text-sm">
+                      <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
+                      <span className="truncate">
+                        {new Date(match.match_date).toLocaleDateString("id-ID")}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs sm:text-sm">
+                      <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
+                      <span className="truncate">
+                        {new Date(match.match_date).toLocaleTimeString(
+                          "id-ID",
+                          { hour: "2-digit", minute: "2-digit" }
+                        )}{" "}
+                        WIB
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs sm:text-sm sm:col-span-2">
+                      <MapPin className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
+                      <span className="truncate">{match.venue}</span>
+                    </div>
+                  </div>
+
+                  {/* Pricing - Mobile Optimized */}
+                  {match.tickets && match.tickets.length > 0 && (
+                    <div className="bg-muted/30 rounded-lg p-2 sm:p-3 mb-3 sm:mb-4">
+                      <div className="flex justify-between items-center">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs sm:text-sm text-muted-foreground">
+                            Harga tiket
+                          </p>
+                          <p className="font-bold text-xs sm:text-sm text-secondary truncate">
+                            {formatPrice(
+                              Math.min(...match.tickets.map((t) => t.price))
+                            )}{" "}
+                            -{" "}
+                            {formatPrice(
+                              Math.max(...match.tickets.map((t) => t.price))
+                            )}
+                          </p>
+                        </div>
+                        <Users className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0 ml-2" />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Action Button */}
+                  <Button
+                    className="w-full bg-primary hover:bg-primary/90 text-sm sm:text-base h-10 sm:h-11"
+                    disabled={
+                      match.ticketStatus === "expired" ||
+                      !match.tickets ||
+                      match.tickets.length === 0
+                    }
+                    onClick={() => {
+                      if (
+                        match.tickets &&
+                        match.tickets.length > 0 &&
+                        match.ticketStatus !== "expired"
+                      ) {
+                        window.location.href = `/tickets/purchase/${match.id}`;
+                      }
+                    }}
+                  >
+                    {match.ticketStatus === "expired"
+                      ? "Tiket Kadaluarsa"
+                      : match.ticketStatus === "ongoing"
+                      ? "Sedang Berlangsung"
+                      : match.tickets && match.tickets.length > 0
+                      ? "Beli Tiket Sekarang"
+                      : "Segera Tersedia"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
 
         {/* No Results */}
         {filteredMatches.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground text-lg mb-4">
+          <div className="text-center py-8 sm:py-12">
+            <p className="text-muted-foreground text-base sm:text-lg mb-4 px-4">
               Tidak ada pertandingan yang ditemukan
             </p>
-            <Button onClick={() => {setSearchQuery(""); setSelectedFilter("all");}}>
+            <Button
+              onClick={() => {
+                setSearchQuery("");
+                setSelectedFilter("all");
+              }}
+            >
               Reset Filter
             </Button>
           </div>
@@ -267,8 +346,12 @@ export default function TicketsPage() {
 
         {/* Load More */}
         {filteredMatches.length > 0 && (
-          <div className="text-center mt-12">
-            <Button size="lg" variant="outline">
+          <div className="text-center mt-8 sm:mt-12">
+            <Button
+              size="lg"
+              variant="outline"
+              className="text-sm sm:text-base"
+            >
               Lihat Lebih Banyak Pertandingan
             </Button>
           </div>

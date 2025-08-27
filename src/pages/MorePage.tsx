@@ -25,46 +25,10 @@ export default function MorePage() {
       action: "gallery"
     },
     {
-      icon: Settings,
-      title: "Pengaturan",
-      description: "Kelola akun dan preferensi Anda",
-      action: "settings"
-    },
-    {
-      icon: Bell,
-      title: "Notifikasi",
-      description: "Atur notifikasi dan pengingat",
-      action: "notifications"
-    },
-    {
-      icon: CreditCard,
-      title: "Metode Pembayaran",
-      description: "Kelola kartu dan metode pembayaran",
-      action: "payment"
-    },
-    {
-      icon: Users,
-      title: "Refer Friends",
-      description: "Ajak teman dan dapatkan reward",
-      action: "referral"
-    },
-    {
-      icon: Download,
-      title: "Download App",
-      description: "Unduh aplikasi mobile untuk pengalaman lebih baik",
-      action: "download"
-    },
-    {
       icon: Star,
       title: "Beri Rating",
       description: "Bantu kami dengan memberikan rating di Play Store",
       action: "rating"
-    },
-    {
-      icon: Share2,
-      title: "Bagikan App",
-      description: "Bagikan ke teman dan keluarga",
-      action: "share"
     },
     {
       icon: HelpCircle,
@@ -100,34 +64,15 @@ export default function MorePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pt-16 sm:pt-20 md:pt-20">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold mb-4">Lainnya</h1>
           <p className="text-muted-foreground text-lg">
             Pengaturan, bantuan, dan fitur tambahan
           </p>
         </div>
-
-        {/* App Info Card */}
-        <Card className="mb-8 bg-gradient-to-r from-primary/10 to-secondary/10">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <div className="text-4xl">⚽</div>
-              <div>
-                <h2 className="text-2xl font-bold">Persiraja</h2>
-                <p className="text-muted-foreground">
-                  Platform resmi untuk berita dan pembelian tiket Persiraja
-                </p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Versi 1.0.0
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Menu Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {menuItems.map((item, index) => {
@@ -155,35 +100,6 @@ export default function MorePage() {
               </Card>
             );
           })}
-        </div>
-
-        {/* Quick Actions */}
-        <Card className="mt-8">
-          <CardHeader>
-            <CardTitle>Aksi Cepat</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Button variant="outline" className="w-full justify-start">
-              <Download className="h-4 w-4 mr-2" />
-              Unduh Aplikasi Mobile
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              <Share2 className="h-4 w-4 mr-2" />
-              Bagikan ke Teman
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              <HelpCircle className="h-4 w-4 mr-2" />
-              Hubungi Customer Service
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Footer Info */}
-        <div className="mt-8 text-center text-sm text-muted-foreground">
-          <p>© 2024 Persiraja Banda Aceh. All rights reserved.</p>
-          <p className="mt-1">
-            Made with ❤️ for Persiraja Fans - Lantak Laju!
-          </p>
         </div>
       </div>
     </div>

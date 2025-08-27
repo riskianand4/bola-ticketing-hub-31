@@ -1,7 +1,7 @@
 import { MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import persirajaLogo from '@/assets/persiraja-logo.png';
+import persirajaLogo from '/icons/persiraja-logo.png';
 
 export function ChatBot() {
   const navigate = useNavigate();
@@ -9,14 +9,14 @@ export function ChatBot() {
   return (
     <Button
       onClick={() => navigate('/assistant')}
-      className="fixed bottom-6 md:bottom-6 bottom-24 right-6 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 z-50 bg-white border-2 border-primary/20 hover:border-primary/40"
+      className="fixed  md:bottom-6 bottom-16 right-6 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 z-50 bg-primary border-2 border-primary/20 hover:border-primary/40 hover:scale-105 flex items-center justify-center"
       size="icon"
       title="Asisten Persiraja"
     >
       <img 
         src={persirajaLogo} 
         alt="Asisten Persiraja" 
-        className="h-8 w-8 object-contain"
+        className="h-14 w-14 object-contain"
       />
     </Button>
   );

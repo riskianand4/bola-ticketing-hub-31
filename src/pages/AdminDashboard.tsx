@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { 
-  Users, 
-  BarChart3, 
-  Newspaper, 
-  Ticket, 
-  ShoppingBag, 
+import {
+  Users,
+  BarChart3,
+  Newspaper,
+  Ticket,
+  ShoppingBag,
   Settings,
   Calendar,
   Image as ImageIcon,
@@ -17,13 +17,30 @@ import {
   DollarSign,
   MessageSquare,
   Tag,
-  Package
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, Area, AreaChart } from "recharts";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  Area,
+  AreaChart,
+} from "recharts";
 import { useAuth } from "@/hooks/useAuth";
 import { useRoles } from "@/hooks/useRoles";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,7 +57,6 @@ import { ScannerUserManagement } from "@/components/ScannerUserManagement";
 import { SimpleNotificationSystem } from "@/components/SimpleNotificationSystem";
 import { LiveCommentaryAdmin } from "@/components/LiveCommentaryAdmin";
 import { PromoCodeManagement } from "@/components/PromoCodeManagement";
-import { BundleDealsManagement } from '@/components/BundleDealsManagement';
 import { LiveCommentarySelector } from "@/components/LiveCommentarySelector";
 import { AdminNotificationSender } from "@/components/AdminNotificationSender";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -48,7 +64,13 @@ import { cn } from "@/lib/utils";
 import { AdminHeader } from "@/components/layout/AdminHeader";
 import { AdminMobileBottomNav } from "@/components/layout/AdminMobileBottomNav";
 import { useLocation } from "react-router-dom";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -67,7 +89,7 @@ const AdminDashboard = () => {
     totalGalleryItems: 0,
     completedOrders: 0,
     websiteVisitors: 0,
-    loading: true
+    loading: true,
   });
 
   const [chartData, setChartData] = useState({
@@ -76,7 +98,7 @@ const AdminDashboard = () => {
     userGrowth: [],
     salesByCategory: [],
     websiteVisits: [],
-    loading: true
+    loading: true,
   });
 
   const fetchDashboardData = async () => {
@@ -85,7 +107,7 @@ const AdminDashboard = () => {
       const currentYear = new Date().getFullYear();
       let startDate = new Date(`${currentYear}-01-01`).toISOString();
       let endDate = new Date(`${currentYear}-12-31`).toISOString();
-      
+
       if (selectedSeason !== "all") {
         const year = parseInt(selectedSeason);
         startDate = new Date(`${year}-01-01`).toISOString();
@@ -93,42 +115,63 @@ const AdminDashboard = () => {
       }
 
       const [
-        usersCount, 
-        ticketOrdersData, 
-        merchandiseOrdersData, 
+        usersCount,
+        ticketOrdersData,
+        merchandiseOrdersData,
         matchesData,
         newsData,
         playersData,
         galleryData,
-        visitorsData
+        visitorsData,
       ] = await Promise.all([
-        supabase.rpc('get_total_users'),
-        supabase.from('ticket_orders')
-          .select('quantity, total_amount, created_at')
-          .eq('payment_status', 'completed')
-          .gte('created_at', startDate)
-          .lt('created_at', endDate),
-        supabase.from('merchandise_orders')
-          .select('total_amount, created_at')
-          .eq('payment_status', 'completed')
-          .gte('created_at', startDate)
-          .lt('created_at', endDate),
-        supabase.from('matches')
-          .select('id, match_date')
-          .gte('match_date', new Date().toISOString()),
-        supabase.from('news').select('id', { count: 'exact', head: true }),
-        supabase.from('players').select('id', { count: 'exact', head: true }).eq('is_active', true),
-        supabase.from('gallery').select('id', { count: 'exact', head: true }),
-        supabase.from('website_visitors')
-          .select('id', { count: 'exact', head: true })
-          .gte('created_at', startDate)
-          .lt('created_at', endDate)
+        supabase.rpc("get_total_users"),
+        supabase
+          .from("ticket_orders")
+          .select("quantity, total_amount, created_at")
+          .eq("payment_status", "completed")
+          .gte("created_at", startDate)
+          .lt("created_at", endDate),
+        supabase
+          .from("merchandise_orders")
+          .select("total_amount, created_at")
+          .eq("payment_status", "completed")
+          .gte("created_at", startDate)
+          .lt("created_at", endDate),
+        supabase
+          .from("matches")
+          .select("id, match_date")
+          .gte("match_date", new Date().toISOString()),
+        supabase.from("news").select("id", { count: "exact", head: true }),
+        supabase
+          .from("players")
+          .select("id", { count: "exact", head: true })
+          .eq("is_active", true),
+        supabase.from("gallery").select("id", { count: "exact", head: true }),
+        supabase
+          .from("website_visitors")
+          .select("id", { count: "exact", head: true })
+          .gte("created_at", startDate)
+          .lt("created_at", endDate),
       ]);
 
-      const totalTicketsSold = ticketOrdersData.data?.reduce((sum, order) => sum + order.quantity, 0) || 0;
-      const ticketSales = ticketOrdersData.data?.reduce((sum, order) => sum + Number(order.total_amount), 0) || 0;
-      const merchandiseSales = merchandiseOrdersData.data?.reduce((sum, order) => sum + Number(order.total_amount), 0) || 0;
-      const completedOrders = (ticketOrdersData.data?.length || 0) + (merchandiseOrdersData.data?.length || 0);
+      const totalTicketsSold =
+        ticketOrdersData.data?.reduce(
+          (sum, order) => sum + order.quantity,
+          0
+        ) || 0;
+      const ticketSales =
+        ticketOrdersData.data?.reduce(
+          (sum, order) => sum + Number(order.total_amount),
+          0
+        ) || 0;
+      const merchandiseSales =
+        merchandiseOrdersData.data?.reduce(
+          (sum, order) => sum + Number(order.total_amount),
+          0
+        ) || 0;
+      const completedOrders =
+        (ticketOrdersData.data?.length || 0) +
+        (merchandiseOrdersData.data?.length || 0);
 
       setDashboardData({
         totalUsers: usersCount.data || 0,
@@ -140,48 +183,75 @@ const AdminDashboard = () => {
         totalGalleryItems: galleryData.count || 0,
         completedOrders,
         websiteVisitors: visitorsData.count || 0,
-        loading: false
+        loading: false,
       });
 
       // Fetch chart data
-      await fetchChartData(ticketOrdersData.data || [], merchandiseOrdersData.data || [], startDate, endDate);
-    } catch (error: any) {
-      console.error('Error fetching dashboard data:', error);
-      toast.error('Gagal memuat data dashboard');
-      setDashboardData(prev => ({ ...prev, loading: false }));
+      await fetchChartData(
+        ticketOrdersData.data || [],
+        merchandiseOrdersData.data || [],
+        startDate,
+        endDate
+      );
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+      toast.error("Gagal memuat data dashboard");
+      setDashboardData((prev) => ({ ...prev, loading: false }));
     }
   };
 
-  const fetchChartData = async (ticketOrders: any[], merchandiseOrders: any[], startDate: string, endDate: string) => {
+  const fetchChartData = async (
+    ticketOrders,
+    merchandiseOrders,
+    startDate,
+    endDate
+  ) => {
     try {
       // Determine base year for charts based on selected season
       const now = new Date();
       let baseYear = now.getFullYear();
-      
+
       if (selectedSeason !== "all") {
         baseYear = parseInt(selectedSeason);
       }
-      
+
       // Generate monthly revenue data for the selected year or current year
       const monthlyRevenue = [];
       for (let i = 11; i >= 0; i--) {
         const monthDate = new Date(baseYear, 11 - i, 1);
-        const monthStart = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1).toISOString();
-        const monthEnd = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0, 23, 59, 59).toISOString();
-        
+        const monthStart = new Date(
+          monthDate.getFullYear(),
+          monthDate.getMonth(),
+          1
+        ).toISOString();
+        const monthEnd = new Date(
+          monthDate.getFullYear(),
+          monthDate.getMonth() + 1,
+          0,
+          23,
+          59,
+          59
+        ).toISOString();
+
         const monthTicketRevenue = ticketOrders
-          .filter(order => order.created_at >= monthStart && order.created_at <= monthEnd)
+          .filter(
+            (order) =>
+              order.created_at >= monthStart && order.created_at <= monthEnd
+          )
           .reduce((sum, order) => sum + Number(order.total_amount), 0);
-          
+
         const monthMerchandiseRevenue = merchandiseOrders
-          .filter(order => order.created_at >= monthStart && order.created_at <= monthEnd)
+          .filter(
+            (order) =>
+              order.created_at >= monthStart && order.created_at <= monthEnd
+          )
           .reduce((sum, order) => sum + Number(order.total_amount), 0);
 
         monthlyRevenue.push({
-          month: monthDate.toLocaleDateString('id-ID', { month: 'short' }),
+          month: monthDate.toLocaleDateString("id-ID", { month: "short" }),
           tickets: monthTicketRevenue,
           merchandise: monthMerchandiseRevenue,
-          total: monthTicketRevenue + monthMerchandiseRevenue
+          total: monthTicketRevenue + monthMerchandiseRevenue,
         });
       }
 
@@ -195,17 +265,31 @@ const AdminDashboard = () => {
         } else {
           dayDate = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
         }
-        
-        const dayStart = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate()).toISOString();
-        const dayEnd = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 23, 59, 59).toISOString();
-        
+
+        const dayStart = new Date(
+          dayDate.getFullYear(),
+          dayDate.getMonth(),
+          dayDate.getDate()
+        ).toISOString();
+        const dayEnd = new Date(
+          dayDate.getFullYear(),
+          dayDate.getMonth(),
+          dayDate.getDate(),
+          23,
+          59,
+          59
+        ).toISOString();
+
         const dayTickets = ticketOrders
-          .filter(order => order.created_at >= dayStart && order.created_at <= dayEnd)
+          .filter(
+            (order) =>
+              order.created_at >= dayStart && order.created_at <= dayEnd
+          )
           .reduce((sum, order) => sum + order.quantity, 0);
 
         ticketSalesData.push({
-          day: dayDate.toLocaleDateString('id-ID', { weekday: 'short' }),
-          tickets: dayTickets
+          day: dayDate.toLocaleDateString("id-ID", { weekday: "short" }),
+          tickets: dayTickets,
         });
       }
 
@@ -213,28 +297,53 @@ const AdminDashboard = () => {
       const userGrowthData = [];
       for (let i = 11; i >= 0; i--) {
         const monthDate = new Date(baseYear, 11 - i, 1);
-        const monthStart = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1).toISOString();
-        const monthEnd = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0, 23, 59, 59).toISOString();
-        
+        const monthStart = new Date(
+          monthDate.getFullYear(),
+          monthDate.getMonth(),
+          1
+        ).toISOString();
+        const monthEnd = new Date(
+          monthDate.getFullYear(),
+          monthDate.getMonth() + 1,
+          0,
+          23,
+          59,
+          59
+        ).toISOString();
+
         const { count } = await supabase
-          .from('profiles')
-          .select('id', { count: 'exact', head: true })
-          .gte('created_at', monthStart)
-          .lt('created_at', monthEnd);
+          .from("profiles")
+          .select("id", { count: "exact", head: true })
+          .gte("created_at", monthStart)
+          .lt("created_at", monthEnd);
 
         userGrowthData.push({
-          month: monthDate.toLocaleDateString('id-ID', { month: 'short' }),
-          users: count || 0
+          month: monthDate.toLocaleDateString("id-ID", { month: "short" }),
+          users: count || 0,
         });
       }
 
       // Sales by category
-      const totalTicketRevenue = ticketOrders.reduce((sum, order) => sum + Number(order.total_amount), 0);
-      const totalMerchandiseRevenue = merchandiseOrders.reduce((sum, order) => sum + Number(order.total_amount), 0);
-      
+      const totalTicketRevenue = ticketOrders.reduce(
+        (sum, order) => sum + Number(order.total_amount),
+        0
+      );
+      const totalMerchandiseRevenue = merchandiseOrders.reduce(
+        (sum, order) => sum + Number(order.total_amount),
+        0
+      );
+
       const salesByCategory = [
-        { name: 'Tiket', value: totalTicketRevenue, color: 'hsl(var(--primary))' },
-        { name: 'Merchandise', value: totalMerchandiseRevenue, color: 'hsl(var(--secondary))' }
+        {
+          name: "Tiket",
+          value: totalTicketRevenue,
+          color: "hsl(var(--primary))",
+        },
+        {
+          name: "Merchandise",
+          value: totalMerchandiseRevenue,
+          color: "hsl(var(--secondary))",
+        },
       ];
 
       // Get website visit data filtered by season
@@ -247,19 +356,30 @@ const AdminDashboard = () => {
         } else {
           dayDate = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
         }
-        
-        const dayStart = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate()).toISOString();
-        const dayEnd = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 23, 59, 59).toISOString();
-        
+
+        const dayStart = new Date(
+          dayDate.getFullYear(),
+          dayDate.getMonth(),
+          dayDate.getDate()
+        ).toISOString();
+        const dayEnd = new Date(
+          dayDate.getFullYear(),
+          dayDate.getMonth(),
+          dayDate.getDate(),
+          23,
+          59,
+          59
+        ).toISOString();
+
         const { count } = await supabase
-          .from('website_visitors')
-          .select('id', { count: 'exact', head: true })
-          .gte('created_at', dayStart)
-          .lt('created_at', dayEnd);
+          .from("website_visitors")
+          .select("id", { count: "exact", head: true })
+          .gte("created_at", dayStart)
+          .lt("created_at", dayEnd);
 
         websiteVisitsData.push({
-          day: dayDate.toLocaleDateString('id-ID', { weekday: 'short' }),
-          visits: count || 0
+          day: dayDate.toLocaleDateString("id-ID", { weekday: "short" }),
+          visits: count || 0,
         });
       }
 
@@ -269,20 +389,20 @@ const AdminDashboard = () => {
         userGrowth: userGrowthData,
         salesByCategory,
         websiteVisits: websiteVisitsData,
-        loading: false
+        loading: false,
       });
     } catch (error) {
-      console.error('Error fetching chart data:', error);
-      setChartData(prev => ({ ...prev, loading: false }));
+      console.error("Error fetching chart data:", error);
+      setChartData((prev) => ({ ...prev, loading: false }));
     }
   };
 
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      toast.success('Berhasil logout');
-    } catch (error: any) {
-      toast.error('Gagal logout');
+      toast.success("Berhasil logout");
+    } catch (error) {
+      toast.error("Gagal logout");
     }
   };
 
@@ -293,7 +413,7 @@ const AdminDashboard = () => {
   // Handle tab from URL params
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
-    const tabFromUrl = urlParams.get('tab');
+    const tabFromUrl = urlParams.get("tab");
     if (tabFromUrl) {
       setActiveTab(tabFromUrl);
     }
@@ -317,64 +437,52 @@ const AdminDashboard = () => {
     { id: "tickets", label: "Kelola Tiket", icon: Ticket },
     { id: "merchandise", label: "Kelola Merchandise", icon: ShoppingBag },
     { id: "promo-codes", label: "Kode Promo", icon: Tag },
-    { id: "bundle-deals", label: "Bundle Deals", icon: Package },
     { id: "players", label: "Kelola Pemain", icon: Users2 },
     { id: "gallery", label: "Kelola Galeri", icon: ImageIcon },
-    { id: "settings", label: "Pengaturan", icon: Settings },
   ];
 
   const renderContent = () => {
     switch (activeTab) {
       case "users":
         return <UserManagement />;
-      
+
       case "scanners":
         return <ScannerUserManagement />;
-      
+
       case "matches":
         return <MatchManagement />;
-      
+
       case "tickets":
         return <TicketManagement />;
-      
+
       case "merchandise":
         return <MerchandiseManagement />;
-      
+
       case "news":
         return <NewsManagement />;
-      
+
       case "players":
         return <PlayerManagement />;
-      
+
       case "gallery":
         return <GalleryManagement />;
-      
+
       case "commentary":
         return <LiveCommentarySelector />;
-      
+
       case "notifications":
         return <AdminNotificationSender />;
-      
+
       case "promo-codes":
         return <PromoCodeManagement />;
-      
-      case "bundle-deals":
-        return <BundleDealsManagement />;
-      
+
       case "dashboard":
         console.log("Rendering dashboard with chartData:", chartData.loading);
         return (
-          <div className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div>
-                <h2 className="text-3xl font-bold text-foreground">Dashboard Admin</h2>
-                <p className="text-muted-foreground">
-                  Selamat datang, {user?.email} ({userRole})
-                </p>
-              </div>
-              
+          <div className="space-y-4 sm:space-y-6">
+            <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
               <Select value={selectedSeason} onValueChange={setSelectedSeason}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-full sm:w-48">
                   <SelectValue placeholder="Pilih musim" />
                 </SelectTrigger>
                 <SelectContent>
@@ -386,134 +494,159 @@ const AdminDashboard = () => {
                 </SelectContent>
               </Select>
             </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
-              <Card className="p-2 md:p-4">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-0">
-                  <CardTitle className="text-xs font-medium">Users</CardTitle>
-                  <Users className="h-3 w-3 text-muted-foreground" />
+
+            {/* Main Statistics */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              <Card className="p-3 sm:p-4   h-28">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-0">
+                  <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+                    Users
+                  </CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent className="px-0">
-                  <div className="text-sm md:text-xl font-bold">
-                    {dashboardData.loading ? "..." : dashboardData.totalUsers.toLocaleString()}
+                  <div className="text-lg sm:text-2xl font-bold">
+                    {dashboardData.loading
+                      ? "..."
+                      : dashboardData.totalUsers.toLocaleString()}
                   </div>
-                  <p className="text-xs text-muted-foreground hidden md:block">Pengguna terdaftar</p>
+         
                 </CardContent>
               </Card>
-              
-              <Card className="p-2 md:p-4">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-0">
-                  <CardTitle className="text-xs font-medium">Tiket</CardTitle>
-                  <Ticket className="h-3 w-3 text-muted-foreground" />
+
+              <Card className="p-3 sm:p-4  h-28">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-0">
+                  <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+                    Tiket
+                  </CardTitle>
+                  <Ticket className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent className="px-0">
-                  <div className="text-sm md:text-xl font-bold">
-                    {dashboardData.loading ? "..." : dashboardData.totalTicketsSold.toLocaleString()}
+                  <div className="text-lg sm:text-2xl font-bold">
+                    {dashboardData.loading
+                      ? "..."
+                      : dashboardData.totalTicketsSold.toLocaleString()}
                   </div>
-                  <p className="text-xs text-muted-foreground hidden md:block">
-                    {selectedSeason === "all" ? "Total keseluruhan" : `Musim ${selectedSeason}`}
-                  </p>
+              
                 </CardContent>
               </Card>
-              
-              <Card className="p-2 md:p-4">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-0">
-                  <CardTitle className="text-xs font-medium">Sales</CardTitle>
-                  <ShoppingBag className="h-3 w-3 text-muted-foreground" />
+
+              <Card className="p-3 sm:p-4  h-28">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-0">
+                  <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+                    Sales
+                  </CardTitle>
+                  <ShoppingBag className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent className="px-0">
-                  <div className="text-sm md:text-xl font-bold">
-                    {dashboardData.loading ? "..." : `${(dashboardData.totalSales / 1000000).toFixed(1)}M`}
+                  <div className="text-lg sm:text-2xl font-bold">
+                    {dashboardData.loading
+                      ? "..."
+                      : `${(dashboardData.totalSales / 1000000).toFixed(1)}M`}
                   </div>
-                  <p className="text-xs text-muted-foreground hidden md:block">
-                    {selectedSeason === "all" ? "Revenue total" : `Revenue ${selectedSeason}`}
-                  </p>
+       
                 </CardContent>
               </Card>
-              
-              <Card className="p-2 md:p-4">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-0">
-                  <CardTitle className="text-xs font-medium">Matches</CardTitle>
-                  <Calendar className="h-3 w-3 text-muted-foreground" />
+              <Card className="p-3 sm:p-4  h-28">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-0">
+                  <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+                    Matches
+                  </CardTitle>
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent className="px-0">
-                  <div className="text-sm md:text-xl font-bold">
-                    {dashboardData.loading ? "..." : dashboardData.upcomingMatches}
+                  <div className="text-lg sm:text-2xl font-bold">
+                    {dashboardData.loading
+                      ? "..."
+                      : dashboardData.upcomingMatches}
                   </div>
-                  <p className="text-xs text-muted-foreground hidden md:block">Pertandingan akan datang</p>
+       
                 </CardContent>
               </Card>
             </div>
 
             {/* Additional Statistics */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
-              <Card className="p-2 md:p-4">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-0">
-                  <CardTitle className="text-xs font-medium">Berita</CardTitle>
-                  <Newspaper className="h-3 w-3 text-muted-foreground" />
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              <Card className="p-3 sm:p-4  h-28">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-0">
+                  <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+                    Berita
+                  </CardTitle>
+                  <Newspaper className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent className="px-0">
-                  <div className="text-sm md:text-xl font-bold">
-                    {dashboardData.loading ? "..." : dashboardData.totalNews.toLocaleString()}
+                  <div className="text-lg sm:text-2xl font-bold">
+                    {dashboardData.loading
+                      ? "..."
+                      : dashboardData.totalNews.toLocaleString()}
                   </div>
-                  <p className="text-xs text-muted-foreground hidden md:block">Artikel terpublikasi</p>
+    
                 </CardContent>
               </Card>
 
-              <Card className="p-2 md:p-4">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-0">
-                  <CardTitle className="text-xs font-medium">Pemain</CardTitle>
-                  <Users2 className="h-3 w-3 text-muted-foreground" />
+              <Card className="p-3 sm:p-4  h-28">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-0">
+                  <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+                    Pemain
+                  </CardTitle>
+                  <Users2 className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent className="px-0">
-                  <div className="text-sm md:text-xl font-bold">
-                    {dashboardData.loading ? "..." : dashboardData.totalPlayers.toLocaleString()}
+                  <div className="text-lg sm:text-2xl font-bold">
+                    {dashboardData.loading
+                      ? "..."
+                      : dashboardData.totalPlayers.toLocaleString()}
                   </div>
-                  <p className="text-xs text-muted-foreground hidden md:block">Pemain aktif</p>
+            
                 </CardContent>
               </Card>
 
-              <Card className="p-2 md:p-4">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-0">
-                  <CardTitle className="text-xs font-medium">Galeri</CardTitle>
-                  <ImageIcon className="h-3 w-3 text-muted-foreground" />
+              <Card className="p-3 sm:p-4  h-28">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-0">
+                  <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+                    Galeri
+                  </CardTitle>
+                  <ImageIcon className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent className="px-0">
-                  <div className="text-sm md:text-xl font-bold">
-                    {dashboardData.loading ? "..." : dashboardData.totalGalleryItems.toLocaleString()}
+                  <div className="text-lg sm:text-2xl font-bold">
+                    {dashboardData.loading
+                      ? "..."
+                      : dashboardData.totalGalleryItems.toLocaleString()}
                   </div>
-                  <p className="text-xs text-muted-foreground hidden md:block">Total foto & video</p>
+             
                 </CardContent>
               </Card>
-
-              <Card className="p-2 md:p-4">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-0">
-                  <CardTitle className="text-xs font-medium">Pengunjung</CardTitle>
-                  <Users className="h-3 w-3 text-muted-foreground" />
+              <Card className="p-3 sm:p-4  h-28">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-0">
+                  <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+                    Pengunjung
+                  </CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent className="px-0">
-                  <div className="text-sm md:text-xl font-bold">
-                    {dashboardData.loading ? "..." : dashboardData.websiteVisitors.toLocaleString()}
+                  <div className="text-lg sm:text-2xl font-bold">
+                    {dashboardData.loading
+                      ? "..."
+                      : dashboardData.websiteVisitors.toLocaleString()}
                   </div>
-                  <p className="text-xs text-muted-foreground hidden md:block">
-                    {selectedSeason === "all" ? "Total kunjungan" : `Kunjungan ${selectedSeason}`}
-                  </p>
+  
                 </CardContent>
               </Card>
             </div>
-
             {/* Charts Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Revenue Chart */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">
-                    Pendapatan Bulanan {selectedSeason !== "all" ? `(${selectedSeason})` : ""}
+            <div className="space-y-4 lg:space-y-6">
+              {/* Revenue Chart - Full width on mobile */}
+              <Card className="w-full">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-base sm:text-lg">
+                    Pendapatan Bulanan{" "}
+                    {selectedSeason !== "all" ? `(${selectedSeason})` : ""}
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="px-2 sm:px-6">
                   {chartData.loading ? (
-                    <div className="h-64 flex items-center justify-center">
+                    <div className="h-48 sm:h-64 flex items-center justify-center">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                     </div>
                   ) : (
@@ -524,19 +657,26 @@ const AdminDashboard = () => {
                           color: "hsl(var(--primary))",
                         },
                       }}
-                      className="h-[250px]"
+                      className="h-48 sm:h-64 w-full"
                     >
                       <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={chartData.monthlyRevenue}>
+                        <AreaChart
+                          data={chartData.monthlyRevenue}
+                          margin={{ top: 5, right: 10, left: 10, bottom: 5 }}
+                        >
                           <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="month" />
-                          <YAxis />
+                          <XAxis
+                            dataKey="month"
+                            tick={{ fontSize: 12 }}
+                            interval={isMobile ? 1 : 0}
+                          />
+                          <YAxis tick={{ fontSize: 12 }} />
                           <ChartTooltip content={<ChartTooltipContent />} />
-                          <Area 
-                            type="monotone" 
-                            dataKey="total" 
-                            stroke="hsl(var(--primary))" 
-                            fill="hsl(var(--primary))" 
+                          <Area
+                            type="monotone"
+                            dataKey="total"
+                            stroke="hsl(var(--primary))"
+                            fill="hsl(var(--primary))"
                             fillOpacity={0.6}
                           />
                         </AreaChart>
@@ -546,174 +686,207 @@ const AdminDashboard = () => {
                 </CardContent>
               </Card>
 
-              {/* User Growth Chart - The missing chart! */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">
-                    Pengguna yang Daftar {selectedSeason !== "all" ? `(${selectedSeason})` : ""}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {chartData.loading ? (
-                    <div className="h-64 flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                    </div>
-                  ) : (
-                    <ChartContainer
-                      config={{
-                        users: {
-                          label: "Pengguna",
-                          color: "hsl(var(--accent))",
-                        },
-                      }}
-                      className="h-[250px]"
-                    >
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={chartData.userGrowth}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="month" />
-                          <YAxis />
-                          <ChartTooltip content={<ChartTooltipContent />} />
-                          <Line 
-                            type="monotone" 
-                            dataKey="users" 
-                            stroke="hsl(var(--accent))" 
-                            strokeWidth={3}
-                            dot={{ fill: "hsl(var(--accent))" }}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </ChartContainer>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Website Visitors Chart */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">
-                    Pengunjung Website {selectedSeason !== "all" ? `(${selectedSeason})` : "(7 Hari)"}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {chartData.loading ? (
-                    <div className="h-64 flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                    </div>
-                  ) : (
-                    <ChartContainer
-                      config={{
-                        visits: {
-                          label: "Kunjungan",
-                          color: "hsl(var(--secondary))",
-                        },
-                      }}
-                      className="h-[250px]"
-                    >
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={chartData.websiteVisits}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="day" />
-                          <YAxis />
-                          <ChartTooltip content={<ChartTooltipContent />} />
-                          <Line 
-                            type="monotone" 
-                            dataKey="visits" 
-                            stroke="hsl(var(--secondary))" 
-                            strokeWidth={3}
-                            dot={{ fill: "hsl(var(--secondary))" }}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </ChartContainer>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Ticket Sales Chart */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">
-                    Penjualan Tiket {selectedSeason !== "all" ? `(${selectedSeason})` : "(7 Hari)"}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {chartData.loading ? (
-                    <div className="h-64 flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                    </div>
-                  ) : (
-                    <ChartContainer
-                      config={{
-                        tickets: {
-                          label: "Tiket",
-                          color: "hsl(var(--primary))",
-                        },
-                      }}
-                      className="h-[250px]"
-                    >
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={chartData.ticketSales}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="day" />
-                          <YAxis />
-                          <ChartTooltip content={<ChartTooltipContent />} />
-                          <Bar dataKey="tickets" fill="hsl(var(--primary))" />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </ChartContainer>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Sales Distribution */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">
-                    Distribusi Penjualan {selectedSeason !== "all" ? `(${selectedSeason})` : ""}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {chartData.loading ? (
-                    <div className="h-64 flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                    </div>
-                  ) : (
-                    <ChartContainer
-                      config={{
-                        tiket: {
-                          label: "Tiket",
-                          color: "hsl(var(--primary))",
-                        },
-                        merchandise: {
-                          label: "Merchandise", 
-                          color: "hsl(var(--secondary))",
-                        },
-                      }}
-                      className="h-[250px]"
-                    >
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={chartData.salesByCategory}
-                            cx="50%"
-                            cy="50%"
-                            outerRadius={80}
-                            fill="#8884d8"
-                            dataKey="value"
-                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+              {/* Charts Grid - Stack on mobile */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+                {/* User Growth Chart */}
+                <Card>
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-base sm:text-lg">
+                      Pengguna yang Daftar{" "}
+                      {selectedSeason !== "all" ? `(${selectedSeason})` : ""}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="px-2 sm:px-6">
+                    {chartData.loading ? (
+                      <div className="h-48 flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                      </div>
+                    ) : (
+                      <ChartContainer
+                        config={{
+                          users: {
+                            label: "Pengguna",
+                            color: "hsl(var(--accent))",
+                          },
+                        }}
+                        className="h-48 w-full"
+                      >
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart
+                            data={chartData.userGrowth}
+                            margin={{ top: 5, right: 10, left: 10, bottom: 5 }}
                           >
-                            {chartData.salesByCategory.map((entry: any, index: number) => (
-                              <Cell key={`cell-${index}`} fill={entry.color} />
-                            ))}
-                          </Pie>
-                          <ChartTooltip content={<ChartTooltipContent />} />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </ChartContainer>
-                  )}
-                </CardContent>
-              </Card>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis
+                              dataKey="month"
+                              tick={{ fontSize: 12 }}
+                              interval={isMobile ? 1 : 0}
+                            />
+                            <YAxis tick={{ fontSize: 12 }} />
+                            <ChartTooltip content={<ChartTooltipContent />} />
+                            <Line
+                              type="monotone"
+                              dataKey="users"
+                              stroke="hsl(var(--accent))"
+                              strokeWidth={3}
+                              dot={{ fill: "hsl(var(--accent))" }}
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </ChartContainer>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Website Visitors Chart */}
+                <Card>
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-base sm:text-lg">
+                      Pengunjung Website{" "}
+                      {selectedSeason !== "all"
+                        ? `(${selectedSeason})`
+                        : "(7 Hari)"}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="px-2 sm:px-6">
+                    {chartData.loading ? (
+                      <div className="h-48 flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                      </div>
+                    ) : (
+                      <ChartContainer
+                        config={{
+                          visits: {
+                            label: "Kunjungan",
+                            color: "hsl(var(--secondary))",
+                          },
+                        }}
+                        className="h-48 w-full"
+                      >
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart
+                            data={chartData.websiteVisits}
+                            margin={{ top: 5, right: 10, left: 10, bottom: 5 }}
+                          >
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="day" tick={{ fontSize: 12 }} />
+                            <YAxis tick={{ fontSize: 12 }} />
+                            <ChartTooltip content={<ChartTooltipContent />} />
+                            <Line
+                              type="monotone"
+                              dataKey="visits"
+                              stroke="hsl(var(--secondary))"
+                              strokeWidth={3}
+                              dot={{ fill: "hsl(var(--secondary))" }}
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </ChartContainer>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Ticket Sales Chart */}
+                <Card>
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-base sm:text-lg">
+                      Penjualan Tiket{" "}
+                      {selectedSeason !== "all"
+                        ? `(${selectedSeason})`
+                        : "(7 Hari)"}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="px-2 sm:px-6">
+                    {chartData.loading ? (
+                      <div className="h-48 flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                      </div>
+                    ) : (
+                      <ChartContainer
+                        config={{
+                          tickets: {
+                            label: "Tiket",
+                            color: "hsl(var(--primary))",
+                          },
+                        }}
+                        className="h-48 w-full"
+                      >
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart
+                            data={chartData.ticketSales}
+                            margin={{ top: 5, right: 10, left: 10, bottom: 5 }}
+                          >
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="day" tick={{ fontSize: 12 }} />
+                            <YAxis tick={{ fontSize: 12 }} />
+                            <ChartTooltip content={<ChartTooltipContent />} />
+                            <Bar dataKey="tickets" fill="hsl(var(--primary))" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </ChartContainer>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Sales Distribution */}
+                <Card>
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-base sm:text-lg">
+                      Distribusi Penjualan{" "}
+                      {selectedSeason !== "all" ? `(${selectedSeason})` : ""}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="px-2 sm:px-6">
+                    {chartData.loading ? (
+                      <div className="h-48 flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                      </div>
+                    ) : (
+                      <ChartContainer
+                        config={{
+                          tiket: {
+                            label: "Tiket",
+                            color: "hsl(var(--primary))",
+                          },
+                          merchandise: {
+                            label: "Merchandise",
+                            color: "hsl(var(--secondary))",
+                          },
+                        }}
+                        className="h-48 w-full"
+                      >
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={chartData.salesByCategory}
+                              cx="50%"
+                              cy="50%"
+                              outerRadius={isMobile ? 60 : 80}
+                              fill="#8884d8"
+                              dataKey="value"
+                              label={({ name, percent }) =>
+                                isMobile
+                                  ? `${(percent * 100).toFixed(0)}%`
+                                  : `${name} ${(percent * 100).toFixed(0)}%`
+                              }
+                              labelLine={false}
+                              fontSize={12}
+                            >
+                              {chartData.salesByCategory.map((entry, index) => (
+                                <Cell
+                                  key={`cell-${index}`}
+                                  fill={entry.color}
+                                />
+                              ))}
+                            </Pie>
+                            <ChartTooltip content={<ChartTooltipContent />} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </ChartContainer>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </div>
         );
@@ -721,7 +894,9 @@ const AdminDashboard = () => {
       default:
         return (
           <div className="text-center py-12">
-            <h3 className="text-lg font-semibold mb-2">Halaman tidak ditemukan</h3>
+            <h3 className="text-lg font-semibold mb-2">
+              Halaman tidak ditemukan
+            </h3>
             <p className="text-muted-foreground">
               Fitur ini sedang dalam pengembangan.
             </p>
@@ -734,11 +909,10 @@ const AdminDashboard = () => {
     <AdminRoute>
       <div className="min-h-screen bg-background">
         <AdminHeader />
-        
+
         <div className="flex">
-          {/* Desktop/Tablet Sidebar */}
           {!isMobile && (
-            <div className="w-64 bg-card border-r border-border h-[calc(100vh-4rem)] sticky top-16">
+            <div className="w-64 bg-card border-r overflow-y-auto border-border h-[calc(100vh-4rem)] sticky top-16">
               <nav className="p-4 space-y-1">
                 {sidebarItems.map((item) => {
                   const Icon = item.icon;
@@ -755,35 +929,25 @@ const AdminDashboard = () => {
                   );
                 })}
               </nav>
-              
-              <div className="absolute bottom-4 left-4 right-4">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="w-full justify-center"
-                  onClick={handleLogout}
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Logout</span>
-                </Button>
-              </div>
             </div>
           )}
 
           {/* Main Content */}
-          <div className={cn(
-            "flex-1 p-6",
-            isMobile ? "pb-20" : ""
-          )}>
+          <div
+            className={cn(
+              "flex-1 p-3 sm:p-6 overflow-x-hidden",
+              isMobile ? "pb-20" : ""
+            )}
+          >
             {renderContent()}
           </div>
         </div>
-        
+
         {/* Mobile Bottom Navigation */}
         {isMobile && (
-          <AdminMobileBottomNav 
-            activeTab={activeTab} 
-            onTabChange={setActiveTab} 
+          <AdminMobileBottomNav
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
           />
         )}
       </div>

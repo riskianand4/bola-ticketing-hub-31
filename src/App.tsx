@@ -52,10 +52,8 @@ function AppContent() {
   const isScannerRoute = location.pathname.startsWith('/scanner-login') || location.pathname.startsWith('/ticket-scanner');
   const isAssistantRoute = location.pathname === '/assistant';
   
-  // Track visitor for analytics
   useVisitorTracking();
   
-  // Scanner routes (separate system)
   if (isScannerRoute) {
     return (
       <Routes>
@@ -103,7 +101,6 @@ function AppContent() {
         <Route path="/player/:id" element={<PlayerDetailPage />} />
         <Route path="/gallery" element={<GalleryPage />} />
         <Route path="/assistant" element={<AssistantPage />} />
-        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
       {!isAssistantRoute && <ChatBot />}

@@ -1,13 +1,9 @@
-// Service Worker for Push Notifications
-// This file is registered by the PushNotificationManager
-
 const CACHE_NAME = 'persiraja-notifications-v1';
 const urlsToCache = [
   '/persiraja-logo.png',
   '/offline.html'
 ];
 
-// Install event - cache resources
 self.addEventListener('install', (event) => {
   console.log('Service Worker installing...');
   event.waitUntil(
@@ -23,7 +19,6 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Activate event - cleanup old caches
 self.addEventListener('activate', (event) => {
   console.log('Service Worker activating...');
   event.waitUntil(
@@ -43,7 +38,6 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Push event - handle incoming push notifications
 self.addEventListener('push', (event) => {
   console.log('Push event received:', event);
 

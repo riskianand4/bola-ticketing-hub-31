@@ -78,7 +78,7 @@ export function NotificationPreferences() {
       case 'denied':
         return <Badge variant="destructive">Ditolak</Badge>;
       default:
-        return <Badge variant="secondary">Belum Diatur</Badge>;
+        return <Badge variant="secondary" className="text-[9px]">Belum Diatur</Badge>;
     }
   };
 
@@ -104,8 +104,7 @@ export function NotificationPreferences() {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <Smartphone className="h-4 w-4" />
-              <Badge variant={isSupported ? "default" : "secondary"}>
+              <Badge variant={isSupported ? "default" : "secondary"} className="text-[9px]">
                 {isSupported ? 'Didukung' : 'Tidak Didukung'}
               </Badge>
             </div>
@@ -114,11 +113,11 @@ export function NotificationPreferences() {
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <Label className="text-sm font-medium">Izin Notifikasi</Label>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground w-52 sm:w-full">
                 Status izin browser untuk menampilkan notifikasi
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 text-xs ">
               {getPermissionBadge()}
             </div>
           </div>

@@ -1,5 +1,5 @@
 import React from "react";
-import { ArrowLeft, Users, ShoppingBag, Image as ImageIcon, Users2, Settings } from "lucide-react";
+import { ArrowLeft, Users, ShoppingBag, Image as ImageIcon, Users2, Settings, ListVideoIcon, Bell, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
@@ -18,6 +18,18 @@ const AdminMorePage = () => {
       description: "Manage user accounts and permissions"
     },
     { 
+      id: "commentary", 
+      label: "Kelola Live Comentary", 
+      icon: ListVideoIcon,
+      description: "Manage Live Comentary"
+    },
+    { 
+      id: "promo-codes", 
+      label: "Kelola Promo", 
+      icon: Tag,
+      description: "Manage Promo and Discounts"
+    },
+    { 
       id: "merchandise", 
       label: "Kelola Merchandise", 
       icon: ShoppingBag,
@@ -28,6 +40,18 @@ const AdminMorePage = () => {
       label: "Kelola Galeri", 
       icon: ImageIcon,
       description: "Manage photo gallery and media"
+    },
+    { 
+      id: "notifications", 
+      label: "Kelola notification", 
+      icon: Bell,
+      description: "Manage notification"
+    },
+    { 
+      id: "scanners", 
+      label: "Kelola Scanner", 
+      icon: ImageIcon,
+      description: "Manage User Scanner "
     },
     { 
       id: "players", 
@@ -44,7 +68,6 @@ const AdminMorePage = () => {
   ];
 
   const handleItemClick = (itemId: string) => {
-    // Navigate back to admin with the selected tab
     navigate(`/admin?tab=${itemId}`);
   };
 
@@ -56,7 +79,7 @@ const AdminMorePage = () => {
     <AdminRoute>
       <div className="min-h-screen bg-background">
         {/* Header */}
-        <header className="h-16 bg-card border-b border-border flex items-center px-4">
+        <header className="h-16 bg-card border-b border-border flex items-center px-2">
           <Button 
             variant="ghost" 
             size="icon"
@@ -67,7 +90,7 @@ const AdminMorePage = () => {
           </Button>
           <div className="flex items-center space-x-3">
             <img 
-              src="/src/assets/persiraja-logo.png" 
+              src="/icons/persiraja-logo.png" 
               alt="Persiraja Logo" 
               className="h-8 w-8"
             />
@@ -78,9 +101,8 @@ const AdminMorePage = () => {
           </div>
         </header>
 
-        {/* Content */}
-        <div className="p-6 space-y-4">
-          <div className="grid grid-cols-1 gap-4">
+        <div className="p-2 space-y-4">
+          <div className="grid grid-cols-1 gap-2">
             {moreItems.map((item) => {
               const Icon = item.icon;
               

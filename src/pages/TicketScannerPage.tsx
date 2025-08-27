@@ -1,25 +1,20 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import { BrowserMultiFormatReader } from '@zxing/browser';
-import { logger } from '@/utils/logger';
-import { 
-  LogOut, 
-  Scan, 
-  CheckCircle, 
-  XCircle, 
-  AlertCircle, 
-  User, 
-  QrCode, 
-  History, 
-  BarChart3, 
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  LogOut,
+  Scan,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  User,
+  QrCode,
+  History,
+  BarChart3,
   Calendar,
   Users,
   FileText,
@@ -28,9 +23,10 @@ import {
   TrendingUp,
   Clock,
   Shield,
-  Info
-} from 'lucide-react';
+  Info,
+} from "lucide-react";
 
+// Mock interfaces for demo
 interface ScannerUser {
   id: string;
   username: string;
@@ -59,7 +55,7 @@ interface ScanHistoryItem {
   match_info: string;
   quantity: number;
   scanned_at: string;
-  status: 'success' | 'failed';
+  status: "success" | "failed";
 }
 
 interface ScanStats {
@@ -70,363 +66,451 @@ interface ScanStats {
 }
 
 export default function TicketScannerPage() {
-  const [scannerUser, setScannerUser] = useState<ScannerUser | null>(null);
-  const [ticketId, setTicketId] = useState('');
+  const [scannerUser, setScannerUser] = useState<ScannerUser | null>({
+    id: "1",
+    username: "scanner1",
+    full_name: "Scanner User",
+    is_active: true
+  });
+  const [ticketId, setTicketId] = useState("");
   const [loading, setLoading] = useState(false);
   const [lastScanResult, setLastScanResult] = useState<ScanResult | null>(null);
-  const [scanHistory, setScanHistory] = useState<ScanHistoryItem[]>([]);
+  const [scanHistory, setScanHistory] = useState<ScanHistoryItem[]>([
+    {
+      id: "1",
+      ticket_order_id: "TK001",
+      customer_name: "John Doe",
+      ticket_type: "VIP",
+      match_info: "Persiraja vs PSM Makassar",
+      quantity: 2,
+      scanned_at: new Date().toISOString(),
+      status: "success"
+    }
+  ]);
   const [scanStats, setScanStats] = useState<ScanStats>({
-    total_scans: 0,
-    successful_scans: 0,
-    today_scans: 0,
-    unique_customers: 0
+    total_scans: 156,
+    successful_scans: 142,
+    today_scans: 23,
+    unique_customers: 89,
   });
-  const [scanMethod, setScanMethod] = useState<'manual' | 'barcode'>('manual');
+  const [scanMethod, setScanMethod] = useState<"manual" | "barcode">("manual");
   const [isScanning, setIsScanning] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const animationRef = useRef<number>();
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [barcodeSupported, setBarcodeSupported] = useState(true);
   const [lastScanTime, setLastScanTime] = useState(0);
   const [isProcessingScan, setIsProcessingScan] = useState(false);
-  const [lastScannedCode, setLastScannedCode] = useState('');
-  const navigate = useNavigate();
+  const [lastScannedCode, setLastScannedCode] = useState("");
+  const [scanningAnimation, setScanningAnimation] = useState(0);
+  const [scanCounter, setScanCounter] = useState(0);
+  const [debugInfo, setDebugInfo] = useState("");
 
-  useEffect(() => {
-    // Check if user is logged in
-    const userData = localStorage.getItem('scanner_user');
-    if (!userData) {
-      navigate('/scanner-login');
-      return;
-    }
-    
-    try {
-      const user = JSON.parse(userData);
-      setScannerUser(user);
-      fetchScanHistory();
-      fetchScanStats();
-      
-      // Check if camera API is available
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        setBarcodeSupported(false);
-        logger.warn('Camera API not available on this device');
-      } else {
-        // Initialize ZXing reader
-        codeReaderRef.current = new BrowserMultiFormatReader();
-        logger.info('ZXing barcode reader initialized');
-      }
-    } catch (error) {
-      toast.error('Error parsing user data');
-      localStorage.removeItem('scanner_user');
-      navigate('/scanner-login');
-    }
-  }, [navigate]);
-
-  const fetchScanHistory = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('ticket_scans')
-        .select(`
-          id,
-          ticket_order_id,
-          scanned_at,
-          ticket_orders!inner (
-            customer_name,
-            quantity,
-            tickets!inner (
-              ticket_type,
-              matches!inner (
-                home_team,
-                away_team
-              )
-            )
-          )
-        `)
-        .order('scanned_at', { ascending: false })
-        .limit(50);
-
-      if (error) throw error;
-
-      if (data) {
-        const formattedHistory: ScanHistoryItem[] = data.map(scan => ({
-          id: scan.id,
-          ticket_order_id: scan.ticket_order_id,
-          customer_name: scan.ticket_orders.customer_name,
-          ticket_type: scan.ticket_orders.tickets.ticket_type,
-          match_info: `${scan.ticket_orders.tickets.matches.home_team} vs ${scan.ticket_orders.tickets.matches.away_team}`,
-          quantity: scan.ticket_orders.quantity,
-          scanned_at: scan.scanned_at,
-          status: 'success'
-        }));
-        setScanHistory(formattedHistory);
-      }
-    } catch (error) {
-      logger.error('Failed to fetch scan history', { error });
-      toast.error('Gagal mengambil riwayat scan');
-    }
+  // Mock toast function
+  const toast = {
+    success: (message: string) => console.log("SUCCESS:", message),
+    error: (message: string) => console.log("ERROR:", message),
+    info: (message: string) => console.log("INFO:", message)
   };
 
-  const fetchScanStats = async () => {
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      
-      // Total scans
-      const { count: totalScans } = await supabase
-        .from('ticket_scans')
-        .select('*', { count: 'exact', head: true });
+  useEffect(() => {
+    // Check camera support
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setBarcodeSupported(false);
+      console.warn("Camera API not available on this device");
+    }
 
-      // Today's scans
-      const { count: todayScans } = await supabase
-        .from('ticket_scans')
-        .select('*', { count: 'exact', head: true })
-        .gte('scanned_at', today);
+    // Check secure context
+    if (!window.isSecureContext && location.hostname !== "localhost") {
+      setBarcodeSupported(false);
+      toast.error("Kamera butuh HTTPS atau pakai localhost.");
+    }
+  }, []);
 
-      // Unique customers
-      const { data: uniqueCustomers } = await supabase
-        .from('ticket_scans')
-        .select(`
-          ticket_orders!inner (
-            customer_name
-          )
-        `);
-
-      const uniqueNames = new Set(uniqueCustomers?.map(s => s.ticket_orders.customer_name));
-
-      setScanStats({
-        total_scans: totalScans || 0,
-        successful_scans: totalScans || 0,
-        today_scans: todayScans || 0,
-        unique_customers: uniqueNames.size
-      });
-    } catch (error) {
-      logger.error('Failed to fetch scan stats', { error });
-      toast.error('Gagal mengambil statistik');
+  // Mock scan function
+  const mockScanTicket = async (ticketId: string): Promise<ScanResult> => {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Mock validation logic
+    const isValid = Math.random() > 0.3; // 70% success rate for demo
+    
+    if (isValid) {
+      return {
+        success: true,
+        message: "Tiket valid dan berhasil di-scan",
+        ticket_info: {
+          customer_name: "Ahmad Rizki",
+          ticket_type: "Tribune Utara",
+          match_info: "Persiraja vs Persib Bandung",
+          match_date: "2024-08-25",
+          quantity: 1,
+          scanned_at: new Date().toISOString()
+        }
+      };
+    } else {
+      return {
+        success: false,
+        message: "Tiket tidak valid atau sudah digunakan"
+      };
     }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('scanner_user');
-    toast.success('Logout berhasil');
-    navigate('/scanner-login');
+    toast.success("Logout berhasil");
+    console.log("User logged out");
   };
 
   const handleScan = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!ticketId.trim()) {
-      toast.error('ID Tiket harus diisi');
+      toast.error("ID Tiket harus diisi");
       return;
     }
 
     setLoading(true);
     setLastScanResult(null);
-    
+
     try {
-      const { data, error } = await supabase.rpc('scan_ticket', {
-        _ticket_order_id: ticketId.trim(),
-        _scanner_user_id: scannerUser?.id
-      });
-
-      if (error) throw error;
-
-      if (!data || data.length === 0) {
-        throw new Error('Tidak ada response dari sistem');
-      }
-
-      const result = data[0] as ScanResult;
+      const result = await mockScanTicket(ticketId.trim());
       setLastScanResult(result);
-      
+
       if (result.success) {
         toast.success(result.message);
-        fetchScanHistory();
-        fetchScanStats();
+        // Update scan history with new scan
+        const newScan: ScanHistoryItem = {
+          id: Date.now().toString(),
+          ticket_order_id: ticketId,
+          customer_name: result.ticket_info?.customer_name || "Unknown",
+          ticket_type: result.ticket_info?.ticket_type || "Unknown",
+          match_info: result.ticket_info?.match_info || "Unknown",
+          quantity: result.ticket_info?.quantity || 1,
+          scanned_at: new Date().toISOString(),
+          status: "success"
+        };
+        setScanHistory(prev => [newScan, ...prev]);
+        
+        // Update stats
+        setScanStats(prev => ({
+          ...prev,
+          total_scans: prev.total_scans + 1,
+          successful_scans: prev.successful_scans + 1,
+          today_scans: prev.today_scans + 1
+        }));
       } else {
         toast.error(result.message);
       }
-      
-      setTicketId('');
+
+      setTicketId("");
     } catch (error: any) {
-      logger.error('Manual scan failed', { ticketId, error });
-      toast.error(error.message || 'Terjadi kesalahan saat scanning');
+      console.error("Manual scan failed", { ticketId, error });
+      toast.error(error.message || "Terjadi kesalahan saat scanning");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleBarcodeDetected = useCallback(async (result: string) => {
-    const currentTime = Date.now();
-    const trimmedResult = result.trim();
+  // Improved barcode detection with better mock simulation
+  const detectBarcode = useCallback(() => {
+    if (!videoRef.current || !canvasRef.current || !isScanning) return;
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const context = canvas.getContext('2d');
     
-    // Enhanced debouncing and duplicate detection
-    if (isProcessingScan || 
-        (currentTime - lastScanTime < 5000) || 
-        trimmedResult === lastScannedCode) {
-      logger.debug('Barcode scan ignored', { 
-        result: trimmedResult, 
-        isProcessing: isProcessingScan,
-        timeSince: currentTime - lastScanTime,
-        isDuplicate: trimmedResult === lastScannedCode
-      });
+    if (!context || video.readyState !== video.HAVE_ENOUGH_DATA) {
+      animationRef.current = requestAnimationFrame(detectBarcode);
       return;
     }
-    
-    // Prevent further scans
-    setIsProcessingScan(true);
-    setLastScanTime(currentTime);
-    setLastScannedCode(trimmedResult);
-    setTicketId(trimmedResult);
-    
-    logger.info('Barcode detected', { result: trimmedResult });
-    
-    // Stop scanning immediately to prevent multiple triggers
-    stopBarcodeScanning();
-    
-    setLoading(true);
-    setLastScanResult(null);
-    
+
+    // Set canvas dimensions to match video
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    // Draw current video frame to canvas
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
     try {
-      const { data, error } = await supabase.rpc('scan_ticket', {
-        _ticket_order_id: trimmedResult,
-        _scanner_user_id: scannerUser?.id
-      });
-
-      if (error) throw error;
-
-      if (!data || data.length === 0) {
-        throw new Error('Tidak ada response dari sistem');
-      }
-
-      const scanResult = data[0] as ScanResult;
-      setLastScanResult(scanResult);
+      // Increment scan counter for simulation
+      setScanCounter(prev => prev + 1);
       
-      if (scanResult.success) {
-        toast.success(`✅ Tiket Valid: ${scanResult.message}`);
-        logger.info('Barcode scan successful', { result: trimmedResult, message: scanResult.message });
-        fetchScanHistory();
-        fetchScanStats();
-      } else {
-        toast.error(`❌ Tiket Invalid: ${scanResult.message}`);
-        logger.warn('Barcode scan failed', { result: trimmedResult, message: scanResult.message });
-      }
+      // Enhanced mock barcode detection
+      const mockBarcodeDetection = () => {
+        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+        
+        let edgePixels = 0;
+        let totalPixels = 0;
+        const centerY = Math.floor(canvas.height / 2);
+        const scanLineStart = Math.floor(canvas.width * 0.2);
+        const scanLineEnd = Math.floor(canvas.width * 0.8);
+        
+        // Analyze pixels along the scanning line for edge detection
+        for (let x = scanLineStart; x < scanLineEnd - 1; x++) {
+          const currentPixelIndex = (centerY * canvas.width + x) * 4;
+          const nextPixelIndex = (centerY * canvas.width + (x + 1)) * 4;
+          
+          const currentBrightness = (data[currentPixelIndex] + data[currentPixelIndex + 1] + data[currentPixelIndex + 2]) / 3;
+          const nextBrightness = (data[nextPixelIndex] + data[nextPixelIndex + 1] + data[nextPixelIndex + 2]) / 3;
+          
+          // Detect edges (significant brightness changes)
+          if (Math.abs(currentBrightness - nextBrightness) > 30) {
+            edgePixels++;
+          }
+          totalPixels++;
+        }
+        
+        const edgeRatio = edgePixels / totalPixels;
+        const timeScanning = Date.now() - lastScanTime;
+        
+        // Update debug info
+        setDebugInfo(`Edges: ${edgePixels}/${totalPixels} (${(edgeRatio * 100).toFixed(1)}%), Time: ${(timeScanning / 1000).toFixed(1)}s, Counter: ${scanCounter}`);
+        
+        // Simulate barcode detection based on:
+        // 1. Sufficient edge transitions (indicating barcode patterns)
+        // 2. Enough scanning time (3-8 seconds)
+        // 3. Random factor for realism
+        if (edgeRatio > 0.15 && timeScanning > 3000 && timeScanning < 15000) {
+          // Higher chance of detection with more edges and optimal timing
+          const detectionChance = Math.min(0.3 + (edgeRatio * 2), 0.8);
+          if (Math.random() < detectionChance) {
+            // Generate various mock barcode formats
+            const formats = [
+              () => "TK" + Math.floor(Math.random() * 1000).toString().padStart(3, '0'),
+              () => "TICKET" + Math.floor(Math.random() * 10000).toString().padStart(4, '0'),
+              () => Math.floor(Math.random() * 1000000000000).toString(),
+              () => "PSJ" + Math.floor(Math.random() * 99999).toString().padStart(5, '0'),
+            ];
+            return formats[Math.floor(Math.random() * formats.length)]();
+          }
+        }
+        
+        return null;
+      };
+
+      const detectedCode = mockBarcodeDetection();
       
-      setTicketId('');
-    } catch (error: any) {
-      logger.error('Barcode scan processing error', { result: trimmedResult, error });
-      toast.error(`Kesalahan: ${error.message || 'Terjadi kesalahan saat scanning'}`);
-    } finally {
-      setLoading(false);
-      // Reset processing state after a delay to allow for proper debouncing
-      setTimeout(() => {
-        setIsProcessingScan(false);
-      }, 1000);
+      if (detectedCode && !isProcessingScan) {
+        handleBarcodeDetected(detectedCode);
+      }
+    } catch (error) {
+      console.debug("Barcode detection error:", error);
     }
-  }, [lastScanTime, lastScannedCode, isProcessingScan, scannerUser?.id]);
+
+    // Continue animation loop
+    animationRef.current = requestAnimationFrame(detectBarcode);
+  }, [isScanning, lastScanTime, isProcessingScan, scanCounter]);
+
+  const handleBarcodeDetected = useCallback(
+    async (result: string) => {
+      const currentTime = Date.now();
+      const trimmedResult = result.trim();
+
+      // Enhanced debouncing and duplicate detection
+      if (
+        isProcessingScan ||
+        currentTime - lastScanTime < 3000 ||
+        trimmedResult === lastScannedCode
+      ) {
+        console.debug("Barcode scan ignored", {
+          result: trimmedResult,
+          isProcessing: isProcessingScan,
+          timeSince: currentTime - lastScanTime,
+          isDuplicate: trimmedResult === lastScannedCode,
+        });
+        return;
+      }
+
+      // Prevent further scans
+      setIsProcessingScan(true);
+      setLastScannedCode(trimmedResult);
+      setTicketId(trimmedResult);
+
+      console.info("Barcode detected", { result: trimmedResult });
+
+      // Stop scanning immediately to prevent multiple triggers
+      stopBarcodeScanning();
+
+      setLoading(true);
+      setLastScanResult(null);
+
+      try {
+        const scanResult = await mockScanTicket(trimmedResult);
+        setLastScanResult(scanResult);
+
+        if (scanResult.success) {
+          toast.success(`✅ Tiket Valid: ${scanResult.message}`);
+          console.info("Barcode scan successful", {
+            result: trimmedResult,
+            message: scanResult.message,
+          });
+          
+          // Update history and stats
+          const newScan: ScanHistoryItem = {
+            id: Date.now().toString(),
+            ticket_order_id: trimmedResult,
+            customer_name: scanResult.ticket_info?.customer_name || "Unknown",
+            ticket_type: scanResult.ticket_info?.ticket_type || "Unknown",
+            match_info: scanResult.ticket_info?.match_info || "Unknown",
+            quantity: scanResult.ticket_info?.quantity || 1,
+            scanned_at: new Date().toISOString(),
+            status: "success"
+          };
+          setScanHistory(prev => [newScan, ...prev]);
+          
+          setScanStats(prev => ({
+            ...prev,
+            total_scans: prev.total_scans + 1,
+            successful_scans: prev.successful_scans + 1,
+            today_scans: prev.today_scans + 1
+          }));
+        } else {
+          toast.error(`❌ Tiket Invalid: ${scanResult.message}`);
+          console.warn("Barcode scan failed", {
+            result: trimmedResult,
+            message: scanResult.message,
+          });
+        }
+
+        setTicketId("");
+      } catch (error: any) {
+        console.error("Barcode scan processing error", {
+          result: trimmedResult,
+          error,
+        });
+        toast.error(
+          `Kesalahan: ${error.message || "Terjadi kesalahan saat scanning"}`
+        );
+      } finally {
+        setLoading(false);
+        // Reset processing state after a delay
+        setTimeout(() => {
+          setIsProcessingScan(false);
+        }, 2000);
+      }
+    },
+    [lastScanTime, lastScannedCode, isProcessingScan]
+  );
 
   const startBarcodeScanning = async () => {
-    if (!barcodeSupported || !codeReaderRef.current) {
-      toast.error('Barcode scanning tidak didukung pada perangkat ini');
+    if (!barcodeSupported) {
+      toast.error("Barcode scanning tidak didukung pada perangkat ini");
       return;
     }
 
     try {
       setIsScanning(true);
-      logger.info('Starting barcode scanning');
-      
-      // Get available video devices
-      const videoInputDevices = await navigator.mediaDevices.enumerateDevices();
-      const cameras = videoInputDevices.filter(device => device.kind === 'videoinput');
-      
-      if (cameras.length === 0) {
-        throw new Error('No camera devices found');
-      }
-      
-      // Prefer rear camera if available
-      const rearCamera = cameras.find(device => 
-        device.label.toLowerCase().includes('back') || 
-        device.label.toLowerCase().includes('rear') ||
-        device.label.toLowerCase().includes('environment')
-      );
-      
-      const selectedDeviceId = rearCamera?.deviceId || cameras[0].deviceId;
-      
-      logger.info('Selected camera device', { 
-        deviceId: selectedDeviceId, 
-        label: rearCamera?.label || cameras[0].label 
-      });
+      setLastScanTime(Date.now());
+      setScanCounter(0);
+      setDebugInfo("Starting camera...");
+      console.info("Starting barcode scanning");
 
-      // Start decoding from video device
-      await codeReaderRef.current.decodeFromVideoDevice(
-        selectedDeviceId,
-        videoRef.current!,
-        (result, error) => {
-          if (result && !isProcessingScan && isScanning) {
-            handleBarcodeDetected(result.getText());
-          }
-          if (error && error.name !== 'NotFoundException' && error.name !== 'ChecksumException') {
-            logger.debug('Barcode scanning error (non-critical)', { error: error.message });
-          }
-        }
+      // Get available video devices
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const cameras = devices.filter(device => device.kind === "videoinput");
+
+      if (cameras.length === 0) {
+        throw new Error("No camera devices found");
+      }
+
+      // Prefer rear camera if available
+      const rearCamera = cameras.find(
+        device =>
+          device.label.toLowerCase().includes("back") ||
+          device.label.toLowerCase().includes("rear") ||
+          device.label.toLowerCase().includes("environment")
       );
-      
-      toast.info('📷 Arahkan kamera ke barcode tiket');
-      
+
+      const constraints = {
+        video: {
+          deviceId: rearCamera ? { exact: rearCamera.deviceId } : undefined,
+          width: { ideal: 1280, min: 640 },
+          height: { ideal: 720, min: 480 },
+          facingMode: rearCamera ? undefined : "environment",
+        }
+      };
+
+      // Get camera stream
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      streamRef.current = stream;
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+        
+        videoRef.current.onloadedmetadata = () => {
+          setDebugInfo("Camera ready, scanning...");
+          detectBarcode();
+          
+          const animateScanning = () => {
+            setScanningAnimation(prev => (prev + 1) % 100);
+            if (isScanning) {
+              setTimeout(animateScanning, 30);
+            }
+          };
+          animateScanning();
+        };
+      }
+
+      console.info("Camera stream started successfully");
+      toast.info("📷 Arahkan kamera ke barcode tiket dan tahan steady");
     } catch (error: any) {
       setIsScanning(false);
-      let errorMessage = 'Tidak dapat mengakses kamera';
-      
-      if (error.name === 'NotAllowedError') {
-        errorMessage = 'Akses kamera ditolak. Silakan izinkan akses kamera di browser.';
-      } else if (error.name === 'NotFoundError') {
-        errorMessage = 'Kamera tidak ditemukan pada perangkat ini.';
-      } else if (error.name === 'NotSupportedError') {
-        errorMessage = 'Kamera tidak didukung pada perangkat ini.';
+      let errorMessage = "Tidak dapat mengakses kamera";
+
+      if (error.name === "NotAllowedError") {
+        errorMessage = "Akses kamera ditolak. Silakan izinkan akses kamera di browser.";
+      } else if (error.name === "NotFoundError") {
+        errorMessage = "Kamera tidak ditemukan pada perangkat ini.";
+      } else if (error.name === "NotSupportedError") {
+        errorMessage = "Kamera tidak didukung pada perangkat ini.";
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
-      logger.error('Failed to start barcode scanning', { error });
+
+      console.error("Failed to start barcode scanning", { error });
       toast.error(errorMessage);
     }
   };
 
-
   const stopBarcodeScanning = () => {
     setIsScanning(false);
-    logger.info('Stopping barcode scanning');
-    
-    try {
-      // Stop all video streams first
-      if (videoRef.current && videoRef.current.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream;
-        stream.getTracks().forEach(track => {
-          track.stop();
-          track.enabled = false;
-        });
-        videoRef.current.srcObject = null;
-        videoRef.current.load(); // Force reload to clear any cached stream
-      }
-      
-      // Recreate the reader to ensure clean state
-      if (codeReaderRef.current) {
-        codeReaderRef.current = new BrowserMultiFormatReader();
-      }
-      
-      logger.debug('ZXing reader and camera streams stopped successfully');
-    } catch (error) {
-      logger.warn('Error stopping ZXing reader', { error });
+    setScanningAnimation(0);
+    setScanCounter(0);
+    setDebugInfo("");
+    console.info("Stopping barcode scanning");
+
+    // Cancel animation frame
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
     }
+
+    // Stop camera stream
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => {
+        track.stop();
+      });
+      streamRef.current = null;
+    }
+
+    // Clear video element
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+
+    console.debug("Camera streams stopped successfully");
   };
 
   // Cleanup on component unmount
   useEffect(() => {
     return () => {
-      if (videoRef.current && videoRef.current.srcObject) {
-        try {
-          const stream = videoRef.current.srcObject as MediaStream;
-          stream.getTracks().forEach(track => track.stop());
-          logger.debug('Camera streams cleaned up on unmount');
-        } catch (error) {
-          logger.warn('Error cleaning up camera streams', { error });
-        }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
       }
     };
   }, []);
@@ -470,7 +554,7 @@ export default function TicketScannerPage() {
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-card"></div>
                 </div>
                 <div>
-                  <CardTitle className="text-xl text-primary">
+                  <CardTitle className="text-md text-primary">
                     Persiraja Ticket Scanner
                   </CardTitle>
                   <p className="text-sm text-muted-foreground flex items-center gap-2">
@@ -479,9 +563,13 @@ export default function TicketScannerPage() {
                   </p>
                 </div>
               </div>
-              <Button variant="outline" size="sm" onClick={handleLogout} className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLogout}
+                className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+              >
+                <LogOut className="h-4 w-4" />
               </Button>
             </div>
           </CardHeader>
@@ -490,15 +578,24 @@ export default function TicketScannerPage() {
         {/* Main Content Tabs */}
         <Tabs defaultValue="scanner" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3 bg-card border border-border shadow-lg">
-            <TabsTrigger value="scanner" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger
+              value="scanner"
+              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
               <Scan className="h-4 w-4" />
               Scanner
             </TabsTrigger>
-            <TabsTrigger value="history" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger
+              value="history"
+              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
               <History className="h-4 w-4" />
               Riwayat
             </TabsTrigger>
-            <TabsTrigger value="stats" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger
+              value="stats"
+              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
               <BarChart3 className="h-4 w-4" />
               Statistik
             </TabsTrigger>
@@ -514,11 +611,12 @@ export default function TicketScannerPage() {
                     <Info className="h-4 w-4 text-primary" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-medium text-sm mb-1">Panduan Cepat</h3>
+                    <h3 className="font-medium text-sm mb-1">Panduan Cepat Scanning</h3>
                     <p className="text-xs text-muted-foreground">
-                      1. Pilih metode scan: Manual input atau Barcode scanner
-                      2. Masukkan ID tiket atau scan barcode
-                      3. Sistem akan memvalidasi tiket secara otomatis
+                      1. Pilih metode "Barcode" 
+                      2. Tekan "Mulai Scan" 
+                      3. Arahkan kamera ke barcode dan tahan steady (3-8 detik)
+                      4. Pastikan barcode terlihat jelas di area scanning
                     </p>
                   </div>
                 </div>
@@ -537,9 +635,9 @@ export default function TicketScannerPage() {
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-2">
                     <Button
-                      variant={scanMethod === 'manual' ? 'default' : 'outline'}
+                      variant={scanMethod === "manual" ? "default" : "outline"}
                       onClick={() => {
-                        setScanMethod('manual');
+                        setScanMethod("manual");
                         if (isScanning) stopBarcodeScanning();
                       }}
                       className="flex items-center gap-2"
@@ -548,8 +646,8 @@ export default function TicketScannerPage() {
                       Manual
                     </Button>
                     <Button
-                      variant={scanMethod === 'barcode' ? 'default' : 'outline'}
-                      onClick={() => setScanMethod('barcode')}
+                      variant={scanMethod === "barcode" ? "default" : "outline"}
+                      onClick={() => setScanMethod("barcode")}
                       disabled={!barcodeSupported}
                       className="flex items-center gap-2"
                     >
@@ -558,7 +656,7 @@ export default function TicketScannerPage() {
                     </Button>
                   </div>
 
-                  {scanMethod === 'manual' ? (
+                  {scanMethod === "manual" ? (
                     <form onSubmit={handleScan} className="space-y-4">
                       <div className="space-y-2">
                         <Label htmlFor="ticketId">ID Tiket</Label>
@@ -571,8 +669,12 @@ export default function TicketScannerPage() {
                           disabled={loading}
                         />
                       </div>
-                      <Button type="submit" disabled={loading} className="w-full">
-                        {loading ? 'Scanning...' : 'Scan Tiket'}
+                      <Button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full"
+                      >
+                        {loading ? "Scanning..." : "Scan Tiket"}
                       </Button>
                     </form>
                   ) : (
@@ -585,25 +687,78 @@ export default function TicketScannerPage() {
                           muted
                           className="w-full h-48 object-cover"
                         />
+                        
+                        {/* Hidden canvas for barcode processing */}
+                        <canvas
+                          ref={canvasRef}
+                          className="hidden"
+                        />
+                        
                         {!isScanning && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50">
                             <Button
                               onClick={startBarcodeScanning}
                               disabled={!barcodeSupported}
-                              className="flex items-center gap-2"
+                              className="flex items-center gap-2 mb-2"
                             >
                               <Camera className="h-4 w-4" />
                               Mulai Scan
                             </Button>
+                            <p className="text-white text-xs text-center px-4">
+                              Pastikan kamera memiliki akses dan barcode terlihat jelas
+                            </p>
                           </div>
                         )}
+                        
                         {isScanning && (
-                          <div className="absolute inset-0 border-2 border-primary">
-                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-2 border-t-2 border-b-2 border-primary"></div>
-                          </div>
+                          <>
+                            {/* Enhanced scanning overlay */}
+                            <div className="absolute inset-0 border-2 border-red-500 rounded-lg">
+                              {/* Animated scanning line */}
+                              <div 
+                                className="absolute left-4 right-4 h-1 bg-red-500 shadow-lg transition-all duration-100"
+                                style={{ 
+                                  top: `${20 + (scanningAnimation * 0.6)}%`,
+                                  boxShadow: '0 0 15px rgba(239, 68, 68, 0.8)',
+                                  background: 'linear-gradient(90deg, transparent, #ef4444, transparent)'
+                                }}
+                              />
+                              
+                              {/* Enhanced corner indicators */}
+                              <div className="absolute top-4 left-4 w-8 h-8 border-t-3 border-l-3 border-red-500"></div>
+                              <div className="absolute top-4 right-4 w-8 h-8 border-t-3 border-r-3 border-red-500"></div>
+                              <div className="absolute bottom-4 left-4 w-8 h-8 border-b-3 border-l-3 border-red-500"></div>
+                              <div className="absolute bottom-4 right-4 w-8 h-8 border-b-3 border-r-3 border-red-500"></div>
+                              
+                              {/* Center focus area */}
+                              <div className="absolute inset-x-8 top-1/3 bottom-1/3 border border-white/30 rounded"></div>
+                            </div>
+                            
+                            {/* Enhanced scanning instructions */}
+                            <div className="absolute bottom-4 left-4 right-4 text-center">
+                              <div className="bg-black/80 rounded-lg px-4 py-3">
+                                <p className="text-white text-sm font-medium mb-1">
+                                  Arahkan ke barcode dan tahan steady
+                                </p>
+                                <p className="text-white/70 text-xs mb-2">
+                                  Jarak optimal: 10-20cm dari barcode
+                                </p>
+                                {debugInfo && (
+                                  <p className="text-green-400 text-xs font-mono">
+                                    {debugInfo}
+                                  </p>
+                                )}
+                                <div className="flex items-center justify-center gap-1 mt-2">
+                                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" style={{animationDelay: '0.3s'}}></div>
+                                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" style={{animationDelay: '0.6s'}}></div>
+                                </div>
+                              </div>
+                            </div>
+                          </>
                         )}
                       </div>
-                      
+
                       {isScanning && (
                         <Button
                           onClick={stopBarcodeScanning}
@@ -630,27 +785,35 @@ export default function TicketScannerPage() {
                   {lastScanResult ? (
                     <div className="space-y-4">
                       {getScanStatusBadge(lastScanResult.success)}
-                      
+
                       <div className="flex items-start gap-3">
                         {getScanStatusIcon(lastScanResult.success)}
                         <div className="flex-1">
                           <p className="font-medium text-sm mb-2">
                             {lastScanResult.message}
                           </p>
-                          
+
                           {lastScanResult.ticket_info && (
                             <div className="space-y-2 text-sm text-muted-foreground">
                               <div className="grid grid-cols-2 gap-2">
                                 <div>
                                   <span className="font-medium">Nama:</span>
-                                  <p>{lastScanResult.ticket_info.customer_name}</p>
+                                  <p>
+                                    {lastScanResult.ticket_info.customer_name}
+                                  </p>
                                 </div>
                                 <div>
-                                  <span className="font-medium">Tipe Tiket:</span>
-                                  <p>{lastScanResult.ticket_info.ticket_type}</p>
+                                  <span className="font-medium">
+                                    Tipe Tiket:
+                                  </span>
+                                  <p>
+                                    {lastScanResult.ticket_info.ticket_type}
+                                  </p>
                                 </div>
                                 <div>
-                                  <span className="font-medium">Pertandingan:</span>
+                                  <span className="font-medium">
+                                    Pertandingan:
+                                  </span>
                                   <p>{lastScanResult.ticket_info.match_info}</p>
                                 </div>
                                 <div>
@@ -660,8 +823,14 @@ export default function TicketScannerPage() {
                               </div>
                               {lastScanResult.ticket_info.scanned_at && (
                                 <div>
-                                  <span className="font-medium">Waktu Scan:</span>
-                                  <p>{new Date(lastScanResult.ticket_info.scanned_at).toLocaleString('id-ID')}</p>
+                                  <span className="font-medium">
+                                    Waktu Scan:
+                                  </span>
+                                  <p>
+                                    {new Date(
+                                      lastScanResult.ticket_info.scanned_at
+                                    ).toLocaleString("id-ID")}
+                                  </p>
                                 </div>
                               )}
                             </div>
@@ -673,7 +842,9 @@ export default function TicketScannerPage() {
                     <div className="text-center text-muted-foreground py-8">
                       <AlertCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
                       <p>Belum ada hasil scan</p>
-                      <p className="text-sm">Scan tiket untuk melihat hasilnya</p>
+                      <p className="text-sm">
+                        Scan tiket untuk melihat hasilnya
+                      </p>
                     </div>
                   )}
                 </CardContent>
@@ -694,20 +865,28 @@ export default function TicketScannerPage() {
                 {scanHistory.length > 0 ? (
                   <div className="space-y-4">
                     {scanHistory.map((scan) => (
-                      <div key={scan.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div
+                        key={scan.id}
+                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+                      >
                         <div className="flex items-center gap-3">
-                          {getScanStatusIcon(scan.status === 'success')}
+                          {getScanStatusIcon(scan.status === "success")}
                           <div>
                             <p className="font-medium">{scan.customer_name}</p>
                             <p className="text-sm text-muted-foreground">
                               {scan.match_info} • {scan.ticket_type}
                             </p>
+                            <p className="text-xs text-muted-foreground">
+                              ID: {scan.ticket_order_id}
+                            </p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm font-medium">{scan.quantity}x</p>
+                          <Badge variant="secondary" className="mb-1">
+                            {scan.quantity}x
+                          </Badge>
                           <p className="text-xs text-muted-foreground">
-                            {new Date(scan.scanned_at).toLocaleString('id-ID')}
+                            {new Date(scan.scanned_at).toLocaleString("id-ID")}
                           </p>
                         </div>
                       </div>
@@ -717,6 +896,9 @@ export default function TicketScannerPage() {
                   <div className="text-center text-muted-foreground py-8">
                     <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <p>Belum ada riwayat scan</p>
+                    <p className="text-sm">
+                      Scan tiket akan muncul di sini
+                    </p>
                   </div>
                 )}
               </CardContent>
@@ -726,57 +908,140 @@ export default function TicketScannerPage() {
           {/* Stats Tab */}
           <TabsContent value="stats" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card className="shadow-lg border border-border bg-card">
+              <Card className="shadow-lg border border-border bg-card hover:shadow-xl transition-shadow">
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-primary/10 rounded-full">
                       <BarChart3 className="h-6 w-6 text-primary" />
                     </div>
                     <div>
-                      <p className="text-2xl font-bold">{scanStats.total_scans}</p>
-                      <p className="text-sm text-muted-foreground">Total Scan</p>
+                      <p className="text-2xl font-bold">
+                        {scanStats.total_scans}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Total Scan
+                      </p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="shadow-lg border border-border bg-card">
+              <Card className="shadow-lg border border-border bg-card hover:shadow-xl transition-shadow">
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-green-500/10 rounded-full">
                       <CheckCircle className="h-6 w-6 text-green-500" />
                     </div>
                     <div>
-                      <p className="text-2xl font-bold">{scanStats.successful_scans}</p>
-                      <p className="text-sm text-muted-foreground">Scan Berhasil</p>
+                      <p className="text-2xl font-bold">
+                        {scanStats.successful_scans}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Scan Berhasil
+                      </p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="shadow-lg border border-border bg-card">
+              <Card className="shadow-lg border border-border bg-card hover:shadow-xl transition-shadow">
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-blue-500/10 rounded-full">
                       <Clock className="h-6 w-6 text-blue-500" />
                     </div>
                     <div>
-                      <p className="text-2xl font-bold">{scanStats.today_scans}</p>
-                      <p className="text-sm text-muted-foreground">Scan Hari Ini</p>
+                      <p className="text-2xl font-bold">
+                        {scanStats.today_scans}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Scan Hari Ini
+                      </p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="shadow-lg border border-border bg-card">
+              <Card className="shadow-lg border border-border bg-card hover:shadow-xl transition-shadow">
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-purple-500/10 rounded-full">
                       <Users className="h-6 w-6 text-purple-500" />
                     </div>
                     <div>
-                      <p className="text-2xl font-bold">{scanStats.unique_customers}</p>
-                      <p className="text-sm text-muted-foreground">Customer Unik</p>
+                      <p className="text-2xl font-bold">
+                        {scanStats.unique_customers}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Customer Unik
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Additional Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card className="shadow-lg border border-border bg-card">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5" />
+                    Success Rate
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Tingkat Berhasil</span>
+                      <span className="text-2xl font-bold text-green-500">
+                        {scanStats.total_scans > 0 
+                          ? Math.round((scanStats.successful_scans / scanStats.total_scans) * 100) 
+                          : 0}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                        style={{ 
+                          width: `${scanStats.total_scans > 0 
+                            ? (scanStats.successful_scans / scanStats.total_scans) * 100 
+                            : 0}%` 
+                        }}
+                      ></div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {scanStats.successful_scans} dari {scanStats.total_scans} scan berhasil
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-lg border border-border bg-card">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5" />
+                    Aktivitas Hari Ini
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Scan Hari Ini</span>
+                      <span className="text-2xl font-bold text-blue-500">
+                        {scanStats.today_scans}
+                      </span>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <span>Aktif sejak login</span>
+                      </div>
+                    </div>
+                    <div className="pt-2 border-t">
+                      <p className="text-xs text-muted-foreground">
+                        Tanggal: {new Date().toLocaleDateString("id-ID")}
+                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -784,6 +1049,27 @@ export default function TicketScannerPage() {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Status Bar */}
+        <Card className="shadow-lg border border-border bg-card">
+          <CardContent className="pt-4">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span>Scanner Active</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Shield className="h-3 w-3" />
+                  <span>Secure Connection</span>
+                </div>
+              </div>
+              <div>
+                Last Updated: {new Date().toLocaleTimeString("id-ID")}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

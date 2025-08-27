@@ -18,13 +18,13 @@ const NotFound = () => {
       <div className="text-center space-y-8 px-4">
         {/* Logo */}
         <div className="flex flex-col items-center space-y-4">
-          <img src="/src/assets/persiraja-logo.png" alt="Persiraja" className="w-20 h-20" />
+          <img src="/icons/persiraja-logo.png" alt="Persiraja" className="w-20 h-20" />
           <div className="text-2xl font-bold text-primary">PERSIRAJA</div>
         </div>
         
         {/* 404 Content */}
         <div className="space-y-4">
-          <h1 className="text-8xl font-bold text-primary">404</h1>
+          <h1 className="text-6xl font-bold text-primary">404</h1>
           <h2 className="text-2xl font-semibold text-foreground">Halaman Tidak Ditemukan</h2>
           <p className="text-muted-foreground max-w-md mx-auto">
             Maaf, halaman yang Anda cari tidak dapat ditemukan. Mungkin halaman telah dipindahkan atau dihapus.
@@ -45,11 +45,6 @@ const NotFound = () => {
               Lihat Berita
             </Button>
           </Link>
-        </div>
-
-        {/* Footer */}
-        <div className="pt-8 text-sm text-muted-foreground">
-          © 2024 Persiraja Banda Aceh. All rights reserved.
         </div>
       </div>
     </div>

@@ -64,7 +64,6 @@ export default function TicketPurchasePage() {
     try {
       setLoading(true);
       
-      // Fetch match with tickets
       const { data: matchData, error } = await supabase
         .from('matches')
         .select(`
@@ -219,7 +218,7 @@ export default function TicketPurchasePage() {
                     <div className="flex items-center space-x-3">
                       <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center">
                         {match.home_team_logo ? (
-                          <img src={match.home_team_logo} alt={match.home_team} className="w-10 h-10" />
+                          <img src={match.home_team_logo} alt={match.home_team} className="w-12 h-12 rounded-full object-cover border" />
                         ) : (
                           <span className="text-xs font-bold">{match.home_team.slice(0, 3).toUpperCase()}</span>
                         )}
@@ -241,7 +240,7 @@ export default function TicketPurchasePage() {
                       </div>
                       <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center">
                         {match.away_team_logo ? (
-                          <img src={match.away_team_logo} alt={match.away_team} className="w-10 h-10" />
+                          <img src={match.away_team_logo} alt={match.away_team} className="w-12 h-12 rounded-full object-cover border" />
                         ) : (
                           <span className="text-xs font-bold">{match.away_team.slice(0, 3).toUpperCase()}</span>
                         )}
