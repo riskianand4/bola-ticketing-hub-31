@@ -14,6 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
+import { createRealtimeSubscription } from '@/utils/realtimeHelper';
 
 interface Notification {
   id: string;
@@ -63,30 +64,21 @@ export function NotificationDropdown() {
   useEffect(() => {
     if (!user?.id) return;
 
-    const channel = supabase
-      .channel('notification-dropdown')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`,
-        },
-        (payload) => {
+    const cleanup = createRealtimeSubscription(
+      'notification-dropdown',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${user.id}`,
+      },
+      (payload) => {
+        console.log('Notification dropdown realtime event:', payload);
+        
+        if (payload.eventType === 'INSERT') {
           // New notification received in dropdown
           setNotifications(prev => [payload.new as Notification, ...prev.slice(0, 9)]);
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`,
-        },
-        (payload) => {
+        } else if (payload.eventType === 'UPDATE') {
           setNotifications(prev => 
             prev.map(notif => 
               notif.id === payload.new.id 
@@ -95,12 +87,10 @@ export function NotificationDropdown() {
             )
           );
         }
-      )
-      .subscribe();
+      }
+    );
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return cleanup;
   }, [user?.id]);
 
   const markAsRead = async (notificationId: string) => {

@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { toast } from 'sonner';
+import { createRealtimeSubscription } from '@/utils/realtimeHelper';
 
 // Extend window interface for global notification function
 declare global {
@@ -40,28 +41,24 @@ export function PushNotificationManager() {
     // Setting up notification listener for authenticated user
     setIsListening(true);
 
-    const channel = supabase
-      .channel('notifications-listener')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`,
-        },
-        (payload) => {
-          // New notification received via realtime
-          handleNewNotification(payload.new as NotificationPayload);
-        }
-      )
-      .subscribe((status) => {
-        // Notification subscription status updated
-      });
+    const cleanup = createRealtimeSubscription(
+      'notifications-listener',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${user.id}`,
+      },
+      (payload) => {
+        // New notification received via realtime
+        console.log('New notification received:', payload.new);
+        handleNewNotification(payload.new as NotificationPayload);
+      }
+    );
 
     return () => {
       console.log('Cleaning up notification listener');
-      supabase.removeChannel(channel);
+      cleanup();
       setIsListening(false);
     };
   }, [isAuthenticated, user?.id]); // Removed isListening and isEnabled from dependencies
